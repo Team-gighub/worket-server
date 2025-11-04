@@ -1,11 +1,35 @@
 #!/bin/sh
-echo "🧹 Running Spotless check before commit..."
-./gradlew spotlessCheck
+echo "🧹 Auto-formatting code with Spotless..."
 
-RESULT=$?
-if [ $RESULT -ne 0 ]; then
-  echo "❌ Spotless check failed. Please run './gradlew spotlessApply' and re-commit."
-  exit 1
+# 모든 플랫폼에서 UTF-8 강제
+export JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF-8"
+export GRADLE_OPTS="-Dfile.encoding=UTF-8"
+
+# OS 감지 및 적절한 Gradle 래퍼 사용
+if [ -f "./gradlew.bat" ] && [ "$OSTYPE" = "msys" ]; then
+  # Windows (Git Bash)
+  ./gradlew.bat spotlessApply --quiet
+else
+  # Mac/Linux
+  ./gradlew spotlessApply --quiet
 fi
 
-echo "✅ Spotless check passed!"
+# 변경된 파일 확인
+CHANGED_FILES=$(git diff --name-only)
+
+if [ -n "$CHANGED_FILES" ]; then
+  echo ""
+  echo "📝 Auto-formatted files:"
+  echo "$CHANGED_FILES" | sed 's/^/  - /'
+  echo ""
+  echo "⚠️  Files were automatically formatted."
+
+  # 변경사항 자동으로 stage에 추가
+  git add -u
+
+  echo "✅ Changes staged for commit."
+else
+  echo "✅ No formatting changes needed."
+fi
+
+echo "✅ Pre-commit checks complete!"
