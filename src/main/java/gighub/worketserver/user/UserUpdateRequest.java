@@ -6,6 +6,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class UserUpdateRequest {
-  private String name;
-  private String phone;
+    private String name;
+    private String phone;
 }

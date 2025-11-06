@@ -1,5 +1,5 @@
 package gighub.worketserver.user.constants;
 
 public enum Role {
-  FREELANCER, CLIENT, ADMIN
+    FREELANCER, CLIENT, ADMIN
 }

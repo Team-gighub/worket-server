@@ -1,28 +1,7 @@
 plugins {
-  id 'java'
-  id 'org.springframework.boot' version '3.5.7'
-  id 'io.spring.dependency-management' version '1.1.7'
-  id 'com.diffplug.spotless' version '6.25.0'
-}
-
-spotless {
-  java {
-    target 'src/**/*.java'
-    eclipse().configFile('config/eclipse-formatter.xml')
-    trimTrailingWhitespace()
-    endWithNewline()
-    encoding 'UTF-8'
-  }
-}
-
-allprojects {
-  tasks.withType(JavaCompile) {
-    options.encoding = 'UTF-8'
-  }
-
-  tasks.withType(com.diffplug.gradle.spotless.SpotlessTask) {
-    encoding 'UTF-8'
-  }
+	id 'java'
+	id 'org.springframework.boot' version '3.5.7'
+	id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'gighub'
@@ -30,31 +9,40 @@ version = '0.0.1-SNAPSHOT'
 description = 'Demo project for Spring Boot'
 
 java {
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(17)
-  }
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
 }
 
 configurations {
-  compileOnly {
-    extendsFrom annotationProcessor
-  }
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
 }
 
 repositories {
-  mavenCentral()
+	mavenCentral()
 }
 
 dependencies {
-  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-  implementation 'org.springframework.boot:spring-boot-starter-web'
-  compileOnly 'org.projectlombok:lombok'
-  runtimeOnly 'com.mysql:mysql-connector-j'
-  annotationProcessor 'org.projectlombok:lombok'
-  testImplementation 'org.springframework.boot:spring-boot-starter-test'
-  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client' //oauth 추가
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+	implementation 'io.jsonwebtoken:jjwt-impl:0.12.5'
+	implementation 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf' // 테스트용 타임리프
+
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2', 'io.jsonwebtoken:jjwt-jackson:0.11.2' //jwt 추가
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-  useJUnitPlatform()
+	useJUnitPlatform()
 }
