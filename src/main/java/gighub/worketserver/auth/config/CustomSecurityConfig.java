@@ -34,14 +34,21 @@ public class CustomSecurityConfig {
 
         http
                 .cors(Customizer.withDefaults())
+
                 .csrf(csrf -> csrf.disable())
+
+                //세션 끄기
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .formLogin(form -> form.disable())
+
                 .httpBasic(basic -> basic.disable())
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/user/login", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/oauth2/**").permitAll()
                         .anyRequest().authenticated()
                 )
+
                 .oauth2Login(oauth -> oauth
                         .userInfoEndpoint(user -> user.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)

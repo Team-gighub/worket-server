@@ -10,14 +10,16 @@ import java.util.Map;
 
 @Builder
 public record OAuth2UserInfo(
-        String oauthId,   // 카카오 id (문자열로)
-        String name      // 닉네임
+        String oauthId,
+        String name
 ) {
 
     public static OAuth2UserInfo of(String registrationId, Map<String, Object> attributes) {
         return switch (registrationId) {
             case "kakao" -> ofKakao(attributes);
+
             // 필요시 다른 provider 추가 (google, naver 등)
+
             default -> throw new IllegalArgumentException("Unsupported registrationId: " + registrationId);
         };
     }

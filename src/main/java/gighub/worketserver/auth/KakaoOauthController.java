@@ -21,7 +21,7 @@ public class KakaoOauthController {
   private final UserService userService;
   private final RestTemplate restTemplate = new RestTemplate();
 
-  /** ✅ 카카오 로그아웃 */
+  /** 카카오 로그아웃 */
   @PostMapping("/logout")
   public ResponseEntity<String> logoutKakao(HttpServletRequest request) {
     try {
@@ -32,7 +32,7 @@ public class KakaoOauthController {
         "https://kapi.kakao.com/v1/user/logout", kakaoAccessToken);
 
       if (kakaoResponse.getStatusCode().is2xxSuccessful()) {
-        // ✅ 로그아웃은 토큰만 삭제
+        // 로그아웃은 토큰만 삭제
         tokenService.deleteKakaoAccessToken(userId);
         return ResponseEntity.ok("카카오 로그아웃 완료");
       } else {

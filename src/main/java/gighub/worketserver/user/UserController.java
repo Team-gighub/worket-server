@@ -31,6 +31,7 @@ public class UserController {
         }
     }
 
+    //userId에 대한 고민중
     @PostMapping("users/{userId}/update")
     public ApiResponse<User> updateUser(
             @PathVariable Long userId,
