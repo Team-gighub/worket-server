@@ -78,8 +78,6 @@ public class KakaoOauthController {
     }
   }
 
-  // 🔹 공통 유틸 메서드 영역 ---------------------------------------------------
-
   /** JWT → userId 추출 */
   private String extractUserIdFromJwt(HttpServletRequest request) {
     String header = request.getHeader("Authorization");

@@ -29,12 +29,13 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 "kakao",
                 authentication.getName()
         );
+
         String kakaoAccessToken = client.getAccessToken().getTokenValue();
 
         // 카카오 access token을 DB나 Redis 등에 저장 (unlink 시 사용)
         tokenService.saveKakaoAccessToken(authentication.getName(), kakaoAccessToken);
 
-        // JWT 발급
+        // 로그인 성공 시 JWT 발급
         String accessToken = tokenProvider.generateAccessToken(authentication);
         tokenProvider.generateRefreshToken(authentication, accessToken);
 
