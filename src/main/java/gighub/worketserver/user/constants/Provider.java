@@ -1,5 +1,5 @@
 package gighub.worketserver.user.constants;
 
 public enum Provider {
-    KAKAO
+    KAKAO, GOOGLE, NAVER
 }

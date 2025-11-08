@@ -33,7 +33,7 @@ public class KakaoOauthController {
 
       if (kakaoResponse.getStatusCode().is2xxSuccessful()) {
         // 로그아웃은 토큰만 삭제
-        tokenService.deleteKakaoAccessToken(userId);
+        tokenService.deleteOauthAccessToken(userId);
         return ResponseEntity.ok("카카오 로그아웃 완료");
       } else {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
@@ -60,7 +60,7 @@ public class KakaoOauthController {
 
       if (kakaoResponse.getStatusCode().is2xxSuccessful()) {
         // unlink는 DB 상태 변경 + 모든 토큰 삭제
-        tokenService.deleteKakaoAccessToken(userId);
+        tokenService.deleteOauthAccessToken(userId);
         tokenService.deleteRefreshToken(userId);
         userService.updateUserStatus(userId, Status.DELETED);
 
@@ -90,9 +90,9 @@ public class KakaoOauthController {
     return authentication.getName();
   }
 
-  /** Kakao Access Token 조회 및 검증 */
+  /** Oauth Access Token 조회 및 검증 */
   private String getKakaoAccessToken(String userId) {
-    String kakaoAccessToken = tokenService.findKakaoAccessToken(userId);
+    String kakaoAccessToken = tokenService.findOauthAccessToken(userId);
     if (kakaoAccessToken == null) {
       throw new IllegalArgumentException("카카오 access token이 없습니다. 다시 로그인해주세요.");
     }

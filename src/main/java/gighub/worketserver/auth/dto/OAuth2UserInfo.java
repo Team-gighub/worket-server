@@ -1,6 +1,5 @@
 package gighub.worketserver.auth.dto;
 
-import gighub.worketserver.user.constants.Provider;
 import gighub.worketserver.user.constants.Role;
 import gighub.worketserver.user.constants.Status;
 import gighub.worketserver.user.User;
@@ -37,10 +36,9 @@ public record OAuth2UserInfo(
                 .build();
     }
 
-    public User toEntity(Provider provider) {
+    public User toEntity() {
         return User.builder()
                 .oauthId(oauthId)
-                .provider(provider)
                 .name(name)
                 .role(Role.FREELANCER) // 기본 역할
                 .status(Status.ACTIVE) // 기본 상태

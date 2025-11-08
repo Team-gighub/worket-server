@@ -1,5 +1,6 @@
 package gighub.worketserver.auth.token;
 
+import gighub.worketserver.user.constants.Provider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,13 +18,13 @@ public class TokenService {
     }
 
     @Transactional
-    public void saveOrUpdate(String memberKey, String refreshToken, String accessToken) {
-        tokenRepository.findById(memberKey).ifPresentOrElse(
+    public void saveOrUpdate(String oauthId, String refreshToken, String accessToken) {
+        tokenRepository.findById(oauthId).ifPresentOrElse(
                 token -> {
                     token.updateAccessToken(accessToken);
                     token.updateRefreshToken(refreshToken);
                 },
-                () -> tokenRepository.save(new Token(memberKey, refreshToken, accessToken, null))
+                () -> tokenRepository.save(new Token(oauthId, refreshToken, accessToken, null, null))
         );
     }
 
@@ -38,26 +39,25 @@ public class TokenService {
         tokenRepository.save(token);
     }
 
-    /** 카카오 access token 저장/갱신 */
+    /** access token 저장/갱신 */
     @Transactional
-    public void saveKakaoAccessToken(String userId, String kakaoAccessToken) {
-        tokenRepository.findById(userId).ifPresentOrElse(
-                token -> token.updateKakaoAccessToken(kakaoAccessToken),
-                () -> tokenRepository.save(new Token(userId, null, null, kakaoAccessToken))
-        );
+    public void saveOauthAccessToken(String userId, String oauthAccessToken, Provider provider) {
+      tokenRepository.findById(userId).ifPresentOrElse(
+        token -> token.updateOauthAccessToken(oauthAccessToken, provider),
+        () -> tokenRepository.save(new Token(userId, null, null, oauthAccessToken, provider))
+      );
     }
 
     @Transactional(readOnly = true)
-    public String findKakaoAccessToken(String userId) {
+    public String findOauthAccessToken(String userId) {
         return tokenRepository.findById(userId)
-                .map(Token::getKakaoAccessToken)
+                .map(Token::getOauthAccessToken)
                 .orElse(null);
     }
 
-    /** 카카오 access token 삭제 */
+    /** oauth access token 삭제 */
     @Transactional
-    public void deleteKakaoAccessToken(String userId) {
-        tokenRepository.findById(userId)
-                .ifPresent(token -> token.updateKakaoAccessToken(null));
+    public void deleteOauthAccessToken(String userId) {
+      tokenRepository.deleteById(userId);
     }
 }

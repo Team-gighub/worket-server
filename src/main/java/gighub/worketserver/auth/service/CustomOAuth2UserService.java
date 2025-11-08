@@ -4,7 +4,6 @@ import gighub.worketserver.auth.dto.OAuth2UserInfo;
 import gighub.worketserver.auth.dto.PrincipalDetails;
 import gighub.worketserver.user.User;
 import gighub.worketserver.user.UserRepository;
-import gighub.worketserver.user.constants.Provider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -38,16 +37,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfo.of(registrationId, oAuth2UserAttributes);
 
         // 5️. DB 저장 or 기존 유저 조회
-        User user = getOrSave(oAuth2UserInfo, registrationId);
+        User user = getOrSave(oAuth2UserInfo);
 
         // 6. PrincipalDetails로 감싸서 반환
         return new PrincipalDetails(user, oAuth2UserAttributes, userNameAttributeName);
     }
 
-    private User getOrSave(OAuth2UserInfo oAuth2UserInfo, String registrationId) {
-        Provider provider = Provider.valueOf(registrationId.toUpperCase());
-
-        return userRepository.findByOauthIdAndProvider(oAuth2UserInfo.oauthId(), provider)
-                .orElseGet(() -> userRepository.save(oAuth2UserInfo.toEntity(provider)));
+    private User getOrSave(OAuth2UserInfo oAuth2UserInfo) {
+        return userRepository.findByOauthId(oAuth2UserInfo.oauthId())
+                .orElseGet(() -> userRepository.save(oAuth2UserInfo.toEntity()));
     }
 }

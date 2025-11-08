@@ -1,7 +1,7 @@
 package gighub.worketserver.auth.token;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import gighub.worketserver.user.constants.Provider;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,7 +17,10 @@ public class Token {
 
     private String refreshToken; // JWT 리프레시 토큰
     private String accessToken;  // JWT 액세스 토큰
-    private String kakaoAccessToken; // 카카오에서 받은 액세스 토큰
+    private String oauthAccessToken;
+
+    @Enumerated(EnumType.STRING)
+    private Provider provider;
 
     public void updateAccessToken(String accessToken) {
         this.accessToken = accessToken;
@@ -27,7 +30,8 @@ public class Token {
         this.refreshToken = refreshToken;
     }
 
-    public void updateKakaoAccessToken(String kakaoAccessToken) {
-        this.kakaoAccessToken = kakaoAccessToken;
+    public void updateOauthAccessToken(String oauthAccessToken, Provider provider) {
+        this.oauthAccessToken = oauthAccessToken;
+        this.provider = provider;
     }
 }
