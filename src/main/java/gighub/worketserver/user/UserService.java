@@ -1,5 +1,6 @@
 package gighub.worketserver.user;
 
+import gighub.worketserver.user.constants.Status;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +48,13 @@ public class UserService {
         }
 
         return user;
+    }
+
+    @Transactional
+    public void updateUserStatus(String oauthId, Status status) {
+        User user = userRepository.findByOauthId(oauthId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        user.setStatus(status);
     }
 }
 

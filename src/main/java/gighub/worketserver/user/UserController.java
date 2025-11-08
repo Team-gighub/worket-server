@@ -1,6 +1,7 @@
 package gighub.worketserver.user;
 
 import gighub.worketserver.global.response.ApiResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,8 +23,7 @@ public class UserController {
     @GetMapping("/mypage")
     public ApiResponse<UserProfileDto> getMyPage(Authentication authentication) {
         try {
-            String userId = authentication.getName(); // JWT의 sub
-            System.out.println("유저아이디띠디디디" + userId);
+            String userId = authentication.getName(); // JWT 토큰에서 sub(oauth_id) 끌어옴
             UserProfileDto profile = userService.getUser(userId);
             return ApiResponse.ok(profile);
         } catch (Exception e) {
