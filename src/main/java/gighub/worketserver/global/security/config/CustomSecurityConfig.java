@@ -1,7 +1,7 @@
 package gighub.worketserver.global.security.config;
 
-import gighub.worketserver.global.security.OAuth2SuccessHandler;
-import gighub.worketserver.global.security.token.TokenAuthenticationFilter;
+import gighub.worketserver.global.security.handler.OAuth2SuccessHandler;
+import gighub.worketserver.global.filter.TokenAuthenticationFilter;
 import gighub.worketserver.global.security.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

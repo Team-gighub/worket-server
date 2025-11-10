@@ -1,7 +1,7 @@
 package gighub.worketserver.controller;
 
 import gighub.worketserver.global.security.token.TokenProvider;
-import gighub.worketserver.global.security.token.TokenService;
+import gighub.worketserver.service.TokenService;
 
 import gighub.worketserver.domain.constants.Status;
 import gighub.worketserver.service.UserService;

@@ -1,4 +1,4 @@
-package gighub.worketserver.global.security.token;
+package gighub.worketserver.global.exception;
 
 import lombok.Getter;
 

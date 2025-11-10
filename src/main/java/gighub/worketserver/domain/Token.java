@@ -1,10 +1,11 @@
-package gighub.worketserver.global.security.token;
+package gighub.worketserver.domain;
 
-import gighub.worketserver.global.security.token.constants.Provider;
+import gighub.worketserver.domain.constants.Provider;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 @Getter
 @AllArgsConstructor
@@ -16,22 +17,19 @@ public class Token {
     private String id;
 
     private String refreshToken; // JWT 리프레시 토큰
-    private String accessToken;  // JWT 액세스 토큰
     private String oauthAccessToken;
 
     @Enumerated(EnumType.STRING)
     private Provider provider;
 
-    public void updateAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public void updateRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
-    }
 
     public void updateOauthAccessToken(String oauthAccessToken, Provider provider) {
         this.oauthAccessToken = oauthAccessToken;
         this.provider = provider;
+    }
+
+    @Transactional
+    public void updateRefreshToken(String refreshToken) {
+      this.refreshToken = refreshToken;
     }
 }

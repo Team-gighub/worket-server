@@ -1,10 +1,8 @@
-package gighub.worketserver.global.security.token;
+package gighub.worketserver.repository;
 
+import gighub.worketserver.domain.Token;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.Optional;
 
 
 public interface TokenRepository extends JpaRepository<Token, String> {
-    Optional<Token> findByAccessToken(String accessToken);
 }

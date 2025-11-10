@@ -1,8 +1,8 @@
-package gighub.worketserver.global.security;
+package gighub.worketserver.global.security.handler;
 
 import gighub.worketserver.global.security.token.TokenProvider;
-import gighub.worketserver.global.security.token.TokenService;
-import gighub.worketserver.global.security.token.constants.Provider;
+import gighub.worketserver.service.TokenService;
+import gighub.worketserver.domain.constants.Provider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +51,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     // 로그인 성공 시 JWT 발급
     String accessToken = tokenProvider.generateAccessToken(authentication);
-    String refreshToken = tokenProvider.generateRefreshToken(authentication, accessToken);
+    String refreshToken = tokenProvider.generateRefreshToken(authentication);
 
     ResponseCookie cookie = ResponseCookie.from("accessToken", accessToken)
       .httpOnly(true)
