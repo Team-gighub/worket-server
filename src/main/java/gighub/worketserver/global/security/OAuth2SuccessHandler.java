@@ -1,8 +1,8 @@
-package gighub.worketserver.auth;
+package gighub.worketserver.global.security;
 
-import gighub.worketserver.auth.token.TokenProvider;
-import gighub.worketserver.auth.token.TokenService;
-import gighub.worketserver.auth.token.constants.Provider;
+import gighub.worketserver.global.security.token.TokenProvider;
+import gighub.worketserver.global.security.token.TokenService;
+import gighub.worketserver.global.security.token.constants.Provider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
-package gighub.worketserver.auth.config;
+package gighub.worketserver.global.security.config;
 
-import gighub.worketserver.auth.OAuth2SuccessHandler;
-import gighub.worketserver.auth.token.TokenAuthenticationFilter;
-import gighub.worketserver.auth.service.CustomOAuth2UserService;
+import gighub.worketserver.global.security.OAuth2SuccessHandler;
+import gighub.worketserver.global.security.token.TokenAuthenticationFilter;
+import gighub.worketserver.global.security.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

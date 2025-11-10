@@ -1,6 +1,6 @@
-package gighub.worketserver.auth.token;
+package gighub.worketserver.global.security.token;
 
-import gighub.worketserver.auth.token.constants.Provider;
+import gighub.worketserver.global.security.token.constants.Provider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,8 +1,8 @@
-package gighub.worketserver.auth.dto;
+package gighub.worketserver.global.security.dto;
 
-import gighub.worketserver.user.constants.Role;
-import gighub.worketserver.user.constants.Status;
-import gighub.worketserver.user.User;
+import gighub.worketserver.domain.User;
+import gighub.worketserver.domain.constants.Role;
+import gighub.worketserver.domain.constants.Status;
 import lombok.Builder;
 
 import java.util.Map;

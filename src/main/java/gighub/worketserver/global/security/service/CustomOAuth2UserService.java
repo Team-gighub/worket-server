@@ -1,9 +1,9 @@
-package gighub.worketserver.auth.service;
+package gighub.worketserver.global.security.service;
 
-import gighub.worketserver.auth.dto.OAuth2UserInfo;
-import gighub.worketserver.auth.dto.PrincipalDetails;
-import gighub.worketserver.user.User;
-import gighub.worketserver.user.UserRepository;
+import gighub.worketserver.domain.User;
+import gighub.worketserver.global.security.dto.OAuth2UserInfo;
+import gighub.worketserver.global.security.dto.PrincipalDetails;
+import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;

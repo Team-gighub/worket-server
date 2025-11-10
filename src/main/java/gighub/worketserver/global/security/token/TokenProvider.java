@@ -1,4 +1,4 @@
-package gighub.worketserver.auth.token;
+package gighub.worketserver.global.security.token;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -19,7 +19,7 @@ import javax.crypto.SecretKey;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static gighub.worketserver.auth.token.TokenErrorCode.*;
+import static gighub.worketserver.global.security.token.TokenErrorCode.*;
 
 @Slf4j
 @RequiredArgsConstructor

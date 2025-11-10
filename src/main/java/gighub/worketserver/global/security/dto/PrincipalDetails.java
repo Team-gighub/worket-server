@@ -1,6 +1,6 @@
-package gighub.worketserver.auth.dto;
+package gighub.worketserver.global.security.dto;
 
-import gighub.worketserver.user.User;
+import gighub.worketserver.domain.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;

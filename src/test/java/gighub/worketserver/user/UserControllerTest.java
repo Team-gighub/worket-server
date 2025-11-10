@@ -1,6 +1,6 @@
 package gighub.worketserver.user;
 
-import gighub.worketserver.auth.token.TokenProvider;
+import gighub.worketserver.global.security.token.TokenProvider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +17,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;        // ✅ status, jsonPath 등
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;                        // ✅ Authorization 헤더
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 
 
 @SpringBootTest

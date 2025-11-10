@@ -1,4 +1,4 @@
-package gighub.worketserver.auth.token;
+package gighub.worketserver.global.security.token;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
