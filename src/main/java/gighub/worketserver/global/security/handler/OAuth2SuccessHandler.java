@@ -35,10 +35,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     Provider provider;
     switch (registrationId.toLowerCase()) {
       case "kakao" -> provider = Provider.KAKAO;
-      case "google" -> provider = Provider.GOOGLE;
-      case "naver" -> provider = Provider.NAVER;
       default -> throw new IllegalArgumentException("지원하지 않는 OAuth provider: " + registrationId);
     }
+
     OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
       registrationId,                  // providerId (동적)
       authentication.getName()         // 현재 로그인한 사용자 식별자
