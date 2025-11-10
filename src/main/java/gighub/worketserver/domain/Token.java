@@ -5,9 +5,11 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.transaction.annotation.Transactional;
 
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -28,7 +30,6 @@ public class Token {
         this.provider = provider;
     }
 
-    @Transactional
     public void updateRefreshToken(String refreshToken) {
       this.refreshToken = refreshToken;
     }
