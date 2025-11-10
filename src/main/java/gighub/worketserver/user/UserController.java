@@ -15,6 +15,7 @@ public class UserController {
         this.userService = userService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users")
     public ApiResponse<List<User>> findAll() {
         return ApiResponse.ok(userService.findAllUsers());
