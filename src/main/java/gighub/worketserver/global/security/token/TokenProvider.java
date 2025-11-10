@@ -13,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -88,9 +89,8 @@ public class TokenProvider {
     Claims claims = parseClaims(token);
     List<SimpleGrantedAuthority> authorities = getAuthorities(claims);
 
-    org.springframework.security.core.userdetails.User principal =
-      new org.springframework.security.core.userdetails.User(
-        claims.getSubject(), "", authorities);
+    User principal =
+      new User(claims.getSubject(), "", authorities);
 
     return new UsernamePasswordAuthenticationToken(principal, token, authorities);
   }
@@ -109,18 +109,33 @@ public class TokenProvider {
     if (!validateToken(refreshToken)) return null;
 
     Authentication authentication = getAuthentication(refreshToken);
+    String oauthId = authentication.getName();
+
+    // DB에 저장된 RefreshToken과 비교 검증
+    String storedRefreshToken = tokenService.findRefreshTokenOrThrow(oauthId);
+    if (!refreshToken.equals(storedRefreshToken)) {
+      throw new TokenException(INVALID_TOKEN);
+    }
+
     return generateAccessToken(authentication);
   }
 
   /**
    * 토큰 유효성 검증
    */
+  /**
+   * 토큰 유효성 검증
+   */
   public boolean validateToken(String token) {
     if (!StringUtils.hasText(token)) return false;
-    Claims claims = parseClaims(token);
-    return claims.getExpiration().after(new Date());
-  }
 
+    try {
+      Claims claims = parseClaims(token);
+      return claims.getExpiration().after(new Date());
+    } catch (TokenException e) {
+      return false;  // 예외 발생 시 false 반환
+    }
+  }
   /**
    * JWT 파싱 및 예외 처리
    */
