@@ -50,9 +50,10 @@ public class TokenProvider {
 
     /** RefreshToken 발급 및 저장 */
     @Transactional
-    public void generateRefreshToken(Authentication authentication, String accessToken) {
-        String refreshToken = generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
-        tokenService.saveOrUpdate(authentication.getName(), refreshToken, accessToken);
+    public String generateRefreshToken(Authentication authentication, String accessToken) {
+      String refreshToken = generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
+      tokenService.saveOrUpdate(authentication.getName(), refreshToken, accessToken);
+      return refreshToken;
     }
 
     /**  JWT 생성 로직 */

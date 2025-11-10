@@ -3,6 +3,7 @@ package gighub.worketserver.auth.config;
 import gighub.worketserver.auth.OAuth2SuccessHandler;
 import gighub.worketserver.auth.token.TokenAuthenticationFilter;
 import gighub.worketserver.auth.service.CustomOAuth2UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,8 +51,14 @@ public class CustomSecurityConfig {
                 )
 
                 .oauth2Login(oauth -> oauth
-                        .userInfoEndpoint(user -> user.userService(customOAuth2UserService))
-                        .successHandler(oAuth2SuccessHandler)
+                  .userInfoEndpoint(user -> user.userService(customOAuth2UserService))
+                  .successHandler(oAuth2SuccessHandler)
+                )
+                .exceptionHandling(ex -> ex
+                  .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Unauthorized");
+                  })
                 )
                 .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -61,16 +68,16 @@ public class CustomSecurityConfig {
     //cors를 위한 설정
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
+      CorsConfiguration config = new CorsConfiguration();
+      config.setAllowedOriginPatterns(List.of("http://localhost:3000"));
+      config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+      config.setAllowedHeaders(List.of("*"));
+      config.setAllowCredentials(true);
+      config.setExposedHeaders(List.of("Authorization"));
+      config.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
+      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+      source.registerCorsConfiguration("/**", config);
+      return source;
     }
 }

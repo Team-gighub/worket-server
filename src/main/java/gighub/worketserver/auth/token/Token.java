@@ -1,6 +1,6 @@
 package gighub.worketserver.auth.token;
 
-import gighub.worketserver.user.constants.Provider;
+import gighub.worketserver.auth.token.constants.Provider;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

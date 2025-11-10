@@ -26,6 +26,7 @@ public record OAuth2UserInfo(
     @SuppressWarnings("unchecked")
     private static OAuth2UserInfo ofKakao(Map<String, Object> attributes) {
         // kakao 구조: id + kakao_account + kakao_account.profile
+
         String id = String.valueOf(attributes.get("id"));
         Map<String, Object> account = (Map<String, Object>) attributes.get("kakao_account");
         Map<String, Object> profile = (Map<String, Object>) account.get("profile");

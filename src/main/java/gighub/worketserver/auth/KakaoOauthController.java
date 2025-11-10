@@ -78,14 +78,22 @@ public class KakaoOauthController {
     }
   }
 
-  /** JWT → userId 추출 */
   private String extractUserIdFromJwt(HttpServletRequest request) {
-    String header = request.getHeader("Authorization");
-    if (header == null || !header.startsWith("Bearer ")) {
-      throw new IllegalArgumentException("Authorization 헤더가 없습니다.");
+    String jwt = null;
+
+    if (jwt == null && request.getCookies() != null) {
+      for (var cookie : request.getCookies()) {
+        if ("accessToken".equals(cookie.getName())) {
+          jwt = cookie.getValue();
+          break;
+        }
+      }
     }
 
-    String jwt = header.substring(7);
+    if (jwt == null) {
+      throw new IllegalArgumentException("JWT 토큰이 없습니다. 로그인 후 다시 시도하세요.");
+    }
+
     Authentication authentication = tokenProvider.getAuthentication(jwt);
     return authentication.getName();
   }
