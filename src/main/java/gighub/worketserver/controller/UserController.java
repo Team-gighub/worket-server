@@ -35,14 +35,4 @@ public class UserController {
             return ApiResponse.error("마이페이지 조회 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
-
-    //userId에 대한 고민중
-    @PostMapping("users/{userId}/update")
-    public ApiResponse<User> updateUser(
-            @PathVariable Long userId,
-            @RequestBody UserUpdateRequest request
-    ) {
-        User updatedUser = userService.updateUser(userId, request);
-        return ApiResponse.ok(updatedUser);
-    }
 }
