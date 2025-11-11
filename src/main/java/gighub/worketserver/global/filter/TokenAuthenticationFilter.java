@@ -60,10 +60,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
       }
 
     } catch (TokenException e) {
-      log.warn("토큰 검증 실패: {}", e.getMessage());
-      clearCookies(response);
-    } catch (Exception e) {
-      log.error("TokenAuthenticationFilter 처리 중 오류", e);
       clearCookies(response);
     }
 
