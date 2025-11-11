@@ -26,7 +26,6 @@ public record OAuth2UserInfo(
     @SuppressWarnings("unchecked")
     private static OAuth2UserInfo ofKakao(Map<String, Object> attributes) {
         // kakao 구조: id + kakao_account + kakao_account.profile
-
         String id = String.valueOf(attributes.get("id"));
         Map<String, Object> account = (Map<String, Object>) attributes.get("kakao_account");
         Map<String, Object> profile = (Map<String, Object>) account.get("profile");
@@ -37,11 +36,11 @@ public record OAuth2UserInfo(
                 .build();
     }
 
-    public User toEntity() {
+    public User toEntity(Role role) {
         return User.builder()
                 .oauthId(oauthId)
                 .name(name)
-                .role(Role.FREELANCER) // 기본 역할
+                .role(role)
                 .status(Status.ACTIVE) // 기본 상태
                 .build();
     }

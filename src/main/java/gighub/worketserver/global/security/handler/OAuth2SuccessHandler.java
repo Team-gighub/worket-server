@@ -29,10 +29,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                                       Authentication authentication) throws IOException {
 
     OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-    System.out.println(oauthToken);
 
     String registrationId = oauthToken.getAuthorizedClientRegistrationId();
     Provider provider;
+    
     switch (registrationId.toLowerCase()) {
       case "kakao" -> provider = Provider.KAKAO;
       default -> throw new IllegalArgumentException("지원하지 않는 OAuth provider: " + registrationId);
