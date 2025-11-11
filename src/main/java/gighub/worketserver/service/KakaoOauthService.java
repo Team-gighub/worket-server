@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -28,10 +29,12 @@ public class KakaoOauthService {
       String kakaoAccessToken = getKakaoAccessToken(userId);
 
       callKakaoApi("https://kapi.kakao.com/v1/user/logout", kakaoAccessToken);
+
       tokenService.deleteRefreshToken(userId);
+
       ResponseCookie clearAccess = ResponseCookie.from("accessToken", "")
         .httpOnly(true)
-        .secure(false)
+        .secure(false) // 운영 시 true (https 필수)
         .sameSite("Lax")
         .path("/")
         .maxAge(0)
