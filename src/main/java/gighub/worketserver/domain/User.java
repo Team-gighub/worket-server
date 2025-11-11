@@ -28,8 +28,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    @Builder.Default
-    private Role role = Role.FREELANCER;
+    private Role role;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)

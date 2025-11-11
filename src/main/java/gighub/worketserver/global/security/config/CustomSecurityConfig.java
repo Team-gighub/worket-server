@@ -1,8 +1,10 @@
 package gighub.worketserver.global.security.config;
 
-import gighub.worketserver.global.security.handler.OAuth2SuccessHandler;
 import gighub.worketserver.global.filter.TokenAuthenticationFilter;
+import gighub.worketserver.global.security.handler.CustomAuthorizationRequestResolver;
+import gighub.worketserver.global.security.handler.OAuth2SuccessHandler;
 import gighub.worketserver.global.security.service.CustomOAuth2UserService;
+import gighub.worketserver.repository.CustomAuthorizationRequestRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +14,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -26,58 +29,61 @@ import java.util.List;
 @EnableMethodSecurity
 public class CustomSecurityConfig {
 
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2SuccessHandler oAuth2SuccessHandler;
-    private final TokenAuthenticationFilter tokenAuthenticationFilter;
+  private final CustomOAuth2UserService customOAuth2UserService;
+  private final OAuth2SuccessHandler oAuth2SuccessHandler;
+  private final TokenAuthenticationFilter tokenAuthenticationFilter;
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  @Bean
+  public SecurityFilterChain filterChain(
+    HttpSecurity http,
+    CustomAuthorizationRequestResolver customAuthorizationRequestResolver,
+    CustomAuthorizationRequestRepository customAuthorizationRequestRepository // ✅ 메서드 인자로만 받기
+  ) throws Exception {
 
-        http
-                .cors(Customizer.withDefaults())
+    http
+      .cors(Customizer.withDefaults())
+      .csrf(csrf -> csrf.disable())
+      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .formLogin(form -> form.disable())
+      .httpBasic(basic -> basic.disable())
 
-                .csrf(csrf -> csrf.disable())
+      .authorizeHttpRequests(auth -> auth
+        .requestMatchers("/oauth2/**").permitAll()
+        .anyRequest().authenticated()
+      )
 
-                //세션 끄기
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .oauth2Login(oauth -> oauth
+        .authorizationEndpoint(auth -> auth
+          .authorizationRequestResolver(customAuthorizationRequestResolver)
+          .authorizationRequestRepository(customAuthorizationRequestRepository) // ✅ 여기에만 사용
+        )
+        .userInfoEndpoint(user -> user.userService(customOAuth2UserService))
+        .successHandler(oAuth2SuccessHandler)
+      )
 
-                .formLogin(form -> form.disable())
+      .exceptionHandling(ex -> ex
+        .authenticationEntryPoint((request, response, authException) -> {
+          response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        })
+      )
 
-                .httpBasic(basic -> basic.disable())
+      .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/oauth2/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+    return http.build();
+  }
 
-                .oauth2Login(oauth -> oauth
-                  .userInfoEndpoint(user -> user.userService(customOAuth2UserService))
-                  .successHandler(oAuth2SuccessHandler)
-                )
-                .exceptionHandling(ex -> ex
-                  .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Unauthorized");
-                  })
-                )
-                .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOriginPatterns(List.of("http://localhost:3000"));
+    config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+    config.setAllowedHeaders(List.of("*"));
+    config.setAllowCredentials(true);
+    config.setExposedHeaders(List.of("Authorization"));
+    config.setMaxAge(3600L);
 
-        return http.build();
-    }
-
-    //cors를 위한 설정
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-      CorsConfiguration config = new CorsConfiguration();
-      config.setAllowedOriginPatterns(List.of("http://localhost:3000"));
-      config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
-      config.setAllowedHeaders(List.of("*"));
-      config.setAllowCredentials(true);
-      config.setExposedHeaders(List.of("Authorization"));
-      config.setMaxAge(3600L);
-
-      UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-      source.registerCorsConfiguration("/**", config);
-      return source;
-    }
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
+  }
 }
