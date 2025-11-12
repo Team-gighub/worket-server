@@ -40,7 +40,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     // OAuth 토큰 정보 추출
     String accessToken = userRequest.getAccessToken().getTokenValue();
-    Instant accessTokenExpiresAt = userRequest.getAccessToken().getExpiresAt();
 
     Object refreshTokenObj = userRequest.getAdditionalParameters().get("refresh_token");
     String refreshToken = refreshTokenObj != null ? refreshTokenObj.toString() : null;
