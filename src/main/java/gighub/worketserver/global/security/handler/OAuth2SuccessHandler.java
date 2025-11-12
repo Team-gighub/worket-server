@@ -48,9 +48,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     String oauthAccessToken = client.getAccessToken().getTokenValue();
 
-    // OAuth Access Token을 DB에 저장
-    oauthTokenService.saveOauthAccessToken(authentication.getName(), oauthAccessToken, provider);
-
     // 로그인 성공 시 JWT 발급
     String accessToken = tokenProvider.generateAccessToken(authentication);
     String refreshToken = tokenProvider.generateRefreshToken(authentication);
