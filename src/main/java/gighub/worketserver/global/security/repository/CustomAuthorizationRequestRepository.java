@@ -1,4 +1,4 @@
-package gighub.worketserver.repository;
+package gighub.worketserver.global.security.repository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

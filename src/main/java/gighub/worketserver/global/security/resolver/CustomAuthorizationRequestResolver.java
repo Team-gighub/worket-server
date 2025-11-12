@@ -1,4 +1,4 @@
-package gighub.worketserver.global.security.handler;
+package gighub.worketserver.global.security.resolver;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;

@@ -1,10 +1,11 @@
 package gighub.worketserver.global.security.config;
 
 import gighub.worketserver.global.filter.TokenAuthenticationFilter;
-import gighub.worketserver.global.security.handler.CustomAuthorizationRequestResolver;
+import gighub.worketserver.global.security.converter.KakaoTokenResponseConverter;
+import gighub.worketserver.global.security.resolver.CustomAuthorizationRequestResolver;
 import gighub.worketserver.global.security.handler.OAuth2SuccessHandler;
 import gighub.worketserver.global.security.service.CustomOAuth2UserService;
-import gighub.worketserver.repository.CustomAuthorizationRequestRepository;
+import gighub.worketserver.global.security.repository.CustomAuthorizationRequestRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +20,6 @@ import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationC
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;

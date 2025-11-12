@@ -6,7 +6,7 @@ import gighub.worketserver.domain.constants.Provider;
 import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.global.security.dto.OAuth2UserInfo;
 import gighub.worketserver.global.security.dto.PrincipalDetails;
-import gighub.worketserver.repository.CustomAuthorizationRequestRepository;
+import gighub.worketserver.global.security.repository.CustomAuthorizationRequestRepository;
 import gighub.worketserver.repository.OauthTokenRepository;
 import gighub.worketserver.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
