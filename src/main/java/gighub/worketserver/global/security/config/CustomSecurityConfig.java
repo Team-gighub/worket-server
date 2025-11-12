@@ -57,7 +57,7 @@ public class CustomSecurityConfig {
 
       .authorizeHttpRequests(auth -> auth
         .requestMatchers("/oauth2/**").permitAll()
-        .requestMatchers("/auth/token/**").authenticated()
+        .requestMatchers("/auth/token/**").permitAll()
         .anyRequest().authenticated()
       )
 
