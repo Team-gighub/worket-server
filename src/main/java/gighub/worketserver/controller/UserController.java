@@ -29,7 +29,6 @@ public class UserController {
         try {
             String userId = authentication.getName(); // JWT 토큰에서 sub(user_id) 끌어옴
             UserProfileDto profile = userService.getUser(userId);
-            System.out.println("왜안되냐" + userId);
             return ApiResponse.ok(profile);
         } catch (Exception e) {
             return ApiResponse.error("마이페이지 조회 중 오류가 발생했습니다: " + e.getMessage());
