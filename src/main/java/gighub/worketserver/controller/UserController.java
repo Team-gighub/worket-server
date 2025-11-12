@@ -28,7 +28,7 @@ public class UserController {
     @GetMapping("/mypage")
     public ApiResponse<UserProfileDto> getMyPage(Authentication authentication) {
         try {
-            String userId = authentication.getName(); // JWT 토큰에서 sub(oauth_id) 끌어옴
+            String userId = authentication.getName(); // JWT 토큰에서 sub(user_id) 끌어옴
             UserProfileDto profile = userService.getUser(userId);
             return ApiResponse.ok(profile);
         } catch (Exception e) {

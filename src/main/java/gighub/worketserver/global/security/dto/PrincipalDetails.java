@@ -28,10 +28,13 @@ public class PrincipalDetails implements OAuth2User {
 
   @Override
   public String getName() {
-    // provider에서 제공하는 기본 식별자(ex. "id")
-    return attributes != null && attributeKey != null
-      ? attributes.get(attributeKey).toString()
-      : user.getName();
+    // user.id를 반환하도록 수정
+    return String.valueOf(user.getId());
+  }
+
+  // 추가: User 객체를 반환하는 getter
+  public User getUser() {
+    return user;
   }
 
   @Override

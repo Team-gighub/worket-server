@@ -1,5 +1,6 @@
 package gighub.worketserver.domain;
 
+import gighub.worketserver.domain.constants.Provider;
 import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.domain.constants.Status;
 import jakarta.persistence.*;
@@ -19,6 +20,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long id;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "provider", nullable = false)
+    private Provider provider;
 
     @Column(name = "oauth_id", nullable = false, length = 255)
     private String oauthId;

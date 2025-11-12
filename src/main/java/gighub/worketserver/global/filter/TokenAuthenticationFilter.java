@@ -2,6 +2,7 @@ package gighub.worketserver.global.filter;
 
 import gighub.worketserver.global.security.token.TokenProvider;
 import gighub.worketserver.global.exception.TokenException;
+import gighub.worketserver.service.RefreshTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -17,6 +18,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ import java.io.IOException;
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
   private final TokenProvider tokenProvider;
+  private final RefreshTokenService refreshTokenService;  // 추가
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -33,25 +36,20 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     String refreshToken = resolveCookieValue(request, "refreshToken");
 
     try {
-      // 1. access token 유효 → 인증 설정
       if (StringUtils.hasText(accessToken) && tokenProvider.validateToken(accessToken)) {
         setAuthentication(accessToken);
       }
-
-      // 2. access token 만료 → refresh token 검증 후 재발급
-      else if (StringUtils.hasText(refreshToken) && tokenProvider.validateToken(refreshToken)) {
-        String newAccessToken = tokenProvider.reissueAccessToken(refreshToken);
-
-        if (StringUtils.hasText(newAccessToken)) {
-          setAuthentication(newAccessToken);
-
-          // 새 access token 쿠키 재설정
-          addCookie(response, "accessToken", newAccessToken, 60 * 30);
-
-          // refresh token도 갱신
-          Authentication auth = tokenProvider.getAuthentication(newAccessToken);
-          String newRefreshToken = tokenProvider.generateRefreshToken(auth);
-          addCookie(response, "refreshToken", newRefreshToken, 7 * 24 * 60 * 60);
+      else if (StringUtils.hasText(refreshToken)) { // accessToken 만료 또는 없음
+        // refreshToken 유효성 + DB 검증
+        if (tokenProvider.validateToken(refreshToken) && refreshTokenService.isValidRefreshToken(refreshToken)) {
+          String newAccessToken = tokenProvider.reissueAccessToken(refreshToken);
+          if (StringUtils.hasText(newAccessToken)) {
+            setAuthentication(newAccessToken);
+            addCookie(response, "accessToken", newAccessToken, 60 * 30);
+            log.info("AccessToken 자동 재발급 완료");
+          }
+        } else {
+          clearCookies(response);
         }
       }
 
@@ -61,6 +59,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
       }
 
     } catch (TokenException e) {
+      log.error("토큰 검증 실패: {}", e.getMessage());
+      clearCookies(response);
+    } catch (Exception e) {
+      log.error("인증 처리 중 오류 발생: {}", e.getMessage(), e);
       clearCookies(response);
     }
 
@@ -77,7 +79,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     for (Cookie cookie : request.getCookies()) {
       if (cookie.getName().equals(name)) {
         String value = cookie.getValue();
-        // 쿠키 값이 빈 문자열("")이면 null로 처리해서 refreshToken 분기로 진입시키기
         return (StringUtils.hasText(value)) ? value : null;
       }
     }

@@ -1,7 +1,9 @@
 package gighub.worketserver.global.security.handler;
 
+import gighub.worketserver.global.security.dto.PrincipalDetails;
 import gighub.worketserver.global.security.token.TokenProvider;
-import gighub.worketserver.service.TokenService;
+import gighub.worketserver.service.OauthTokenService;  // 변경
+import gighub.worketserver.service.RefreshTokenService;  // 추가
 import gighub.worketserver.domain.constants.Provider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,13 +17,15 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
   private final TokenProvider tokenProvider;
-  private final TokenService tokenService;
+  private final OauthTokenService oauthTokenService;  // 변경
+  private final RefreshTokenService refreshTokenService;  // 추가
   private final OAuth2AuthorizedClientService authorizedClientService;
 
   @Override
@@ -32,34 +36,44 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     String registrationId = oauthToken.getAuthorizedClientRegistrationId();
     Provider provider;
-    
+
     switch (registrationId.toLowerCase()) {
       case "kakao" -> provider = Provider.KAKAO;
       default -> throw new IllegalArgumentException("지원하지 않는 OAuth provider: " + registrationId);
     }
 
     OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
-      registrationId,                  // providerId (동적)
-      authentication.getName()         // 현재 로그인한 사용자 식별자
+      registrationId,
+      authentication.getName()
     );
 
     String oauthAccessToken = client.getAccessToken().getTokenValue();
 
-    // oauth access token을 DB나 Redis 등에 저장함
-    tokenService.saveOauthAccessToken(authentication.getName(), oauthAccessToken, provider);
+    // OAuth Access Token을 DB에 저장
+    oauthTokenService.saveOauthAccessToken(authentication.getName(), oauthAccessToken, provider);
 
     // 로그인 성공 시 JWT 발급
     String accessToken = tokenProvider.generateAccessToken(authentication);
     String refreshToken = tokenProvider.generateRefreshToken(authentication);
 
+    // User ID 추출
+    PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+    Long userId = principalDetails.getUser().getId();
+
+    // JWT Refresh Token을 DB에 저장 (7일 유효기간)
+    LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
+    refreshTokenService.saveRefreshToken(userId, refreshToken, refreshTokenExpiresAt);
+
+    // Access Token 쿠키 (1시간)
     ResponseCookie cookie = ResponseCookie.from("accessToken", accessToken)
       .httpOnly(true)
-      .secure(false) // https
+      .secure(false)
       .sameSite("Lax")
       .path("/")
       .maxAge(60 * 60)
       .build();
 
+    // Refresh Token 쿠키 (7일)
     ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
       .httpOnly(true)
       .secure(false)

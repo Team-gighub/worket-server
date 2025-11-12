@@ -1,7 +1,8 @@
 package gighub.worketserver.global.security.token;
 
 import gighub.worketserver.global.exception.TokenException;
-import gighub.worketserver.service.TokenService;
+import gighub.worketserver.global.security.dto.PrincipalDetails;
+import gighub.worketserver.service.RefreshTokenService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,52 +31,59 @@ import static gighub.worketserver.global.exception.TokenErrorCode.*;
 @Component
 public class TokenProvider {
 
-  private final TokenService tokenService;
+  private final RefreshTokenService refreshTokenService;
 
   @Value("${JWT_SECRET_KEY}")
   private String key;
 
   private SecretKey secretKey;
 
-  private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 30;       // 30분
+  private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 30; // 30분
   private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 7; // 7일
   private static final String KEY_ROLE = "role";
 
   @PostConstruct
-  private void setSecretKey() {
+  private void initKey() {
     secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(key));
   }
 
-  /**
-   * AccessToken 발급
-   */
+  /** AccessToken 발급 */
   public String generateAccessToken(Authentication authentication) {
     return generateToken(authentication, ACCESS_TOKEN_EXPIRE_TIME);
   }
 
-  /**
-   * RefreshToken 발급 및 저장
-   */
+  /** RefreshToken 발급 및 DB 저장 */
   @Transactional
   public String generateRefreshToken(Authentication authentication) {
     String refreshToken = generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
-    tokenService.saveOrUpdateRefreshToken(authentication.getName(), refreshToken);
+    Long userId = Long.parseLong(authentication.getName());
+    LocalDateTime expiresAt = LocalDateTime.now().plusDays(7);
+    refreshTokenService.saveRefreshToken(userId, refreshToken, expiresAt);
     return refreshToken;
   }
 
-  /**
-   * JWT 생성 공통 로직
-   */
+  /** JWT 생성 공통 로직 */
   private String generateToken(Authentication authentication, long expireTime) {
     Date now = new Date();
     Date expiry = new Date(now.getTime() + expireTime);
+
+    Object principalObj = authentication.getPrincipal();
+    String userId;
+
+    if (principalObj instanceof PrincipalDetails) {
+      userId = String.valueOf(((PrincipalDetails) principalObj).getUser().getId());
+    } else if (principalObj instanceof org.springframework.security.core.userdetails.User) {
+      userId = ((User) principalObj).getUsername();
+    } else {
+      throw new IllegalStateException("지원되지 않는 Principal 타입: " + principalObj.getClass());
+    }
 
     String authorities = authentication.getAuthorities().stream()
       .map(GrantedAuthority::getAuthority)
       .collect(Collectors.joining(","));
 
     return Jwts.builder()
-      .subject(authentication.getName())     // sub: oauth_id
+      .subject(userId)
       .claim(KEY_ROLE, authorities)
       .issuedAt(now)
       .expiration(expiry)
@@ -82,37 +91,25 @@ public class TokenProvider {
       .compact();
   }
 
-  /**
-   * JWT에서 Authentication 복원
-   */
+  /** JWT에서 Authentication 복원 */
   public Authentication getAuthentication(String token) {
     Claims claims = parseClaims(token);
-    List<SimpleGrantedAuthority> authorities = getAuthorities(claims);
-
-    User principal =
-      new User(claims.getSubject(), "", authorities);
-
+    List<SimpleGrantedAuthority> authorities = Collections.singletonList(
+      new SimpleGrantedAuthority(claims.get(KEY_ROLE).toString()));
+    User principal = new User(claims.getSubject(), "", authorities);
     return new UsernamePasswordAuthenticationToken(principal, token, authorities);
   }
 
-  private List<SimpleGrantedAuthority> getAuthorities(Claims claims) {
-    String role = claims.get(KEY_ROLE).toString();
-    return Collections.singletonList(new SimpleGrantedAuthority(role));
-  }
-
-  /**
-   * RefreshToken으로 AccessToken 재발급
-   */
+  /** RefreshToken으로 AccessToken 재발급 */
   @Transactional
   public String reissueAccessToken(String refreshToken) {
     if (!StringUtils.hasText(refreshToken)) return null;
     if (!validateToken(refreshToken)) return null;
 
     Authentication authentication = getAuthentication(refreshToken);
-    String oauthId = authentication.getName();
+    Long userId = Long.parseLong(authentication.getName());
 
-    // DB에 저장된 RefreshToken과 비교 검증
-    String storedRefreshToken = tokenService.findRefreshTokenOrThrow(oauthId);
+    String storedRefreshToken = refreshTokenService.findRefreshTokenOrThrow(userId);
     if (!refreshToken.equals(storedRefreshToken)) {
       throw new TokenException(INVALID_TOKEN);
     }
@@ -120,25 +117,19 @@ public class TokenProvider {
     return generateAccessToken(authentication);
   }
 
-  /**
-   * 토큰 유효성 검증
-   */
-  /**
-   * 토큰 유효성 검증
-   */
+  /** 토큰 유효성 검증 */
   public boolean validateToken(String token) {
     if (!StringUtils.hasText(token)) return false;
-
     try {
       Claims claims = parseClaims(token);
       return claims.getExpiration().after(new Date());
-    } catch (TokenException e) {
-      return false;  // 예외 발생 시 false 반환
+    } catch (Exception e) {
+      log.warn("토큰 검증 실패: {}", e.getMessage());
+      return false;
     }
   }
-  /**
-   * JWT 파싱 및 예외 처리
-   */
+
+  /** JWT 파싱 */
   private Claims parseClaims(String token) {
     try {
       return Jwts.parser()
@@ -149,10 +140,8 @@ public class TokenProvider {
     } catch (ExpiredJwtException e) {
       log.warn("만료된 토큰입니다.");
       return e.getClaims();
-    } catch (MalformedJwtException e) {
+    } catch (JwtException e) {
       throw new TokenException(INVALID_TOKEN);
-    } catch (SecurityException e) {
-      throw new TokenException(INVALID_JWT_SIGNATURE);
     }
   }
 }

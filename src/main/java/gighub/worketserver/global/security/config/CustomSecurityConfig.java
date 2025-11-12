@@ -9,18 +9,26 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationCodeTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
+import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -37,7 +45,7 @@ public class CustomSecurityConfig {
   public SecurityFilterChain filterChain(
     HttpSecurity http,
     CustomAuthorizationRequestResolver customAuthorizationRequestResolver,
-    CustomAuthorizationRequestRepository customAuthorizationRequestRepository // ✅ 메서드 인자로만 받기
+    CustomAuthorizationRequestRepository customAuthorizationRequestRepository
   ) throws Exception {
 
     http
@@ -49,14 +57,16 @@ public class CustomSecurityConfig {
 
       .authorizeHttpRequests(auth -> auth
         .requestMatchers("/oauth2/**").permitAll()
+        .requestMatchers("/auth/token/**").authenticated()
         .anyRequest().authenticated()
       )
 
       .oauth2Login(oauth -> oauth
         .authorizationEndpoint(auth -> auth
           .authorizationRequestResolver(customAuthorizationRequestResolver)
-          .authorizationRequestRepository(customAuthorizationRequestRepository) // ✅ 여기에만 사용
+          .authorizationRequestRepository(customAuthorizationRequestRepository)
         )
+        .tokenEndpoint(token -> token.accessTokenResponseClient(kakaoTokenResponseClient()))
         .userInfoEndpoint(user -> user.userService(customOAuth2UserService))
         .successHandler(oAuth2SuccessHandler)
       )
@@ -85,5 +95,20 @@ public class CustomSecurityConfig {
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);
     return source;
+  }
+
+  private OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> kakaoTokenResponseClient() {
+    DefaultAuthorizationCodeTokenResponseClient client = new DefaultAuthorizationCodeTokenResponseClient();
+
+    OAuth2AccessTokenResponseHttpMessageConverter converter =
+      new OAuth2AccessTokenResponseHttpMessageConverter();
+    converter.setAccessTokenResponseConverter(new KakaoTokenResponseConverter());
+
+    RestTemplate restTemplate = new RestTemplate(Arrays.asList(
+      new FormHttpMessageConverter(), converter));
+    restTemplate.setErrorHandler(new OAuth2ErrorResponseErrorHandler());
+
+    client.setRestOperations(restTemplate);
+    return client;
   }
 }
