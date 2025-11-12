@@ -49,20 +49,9 @@ public class OauthTokenService {
       .orElse(null);
   }
 
-  /** OAuth Access Token 삭제 */
   @Transactional
   public void deleteOauthAccessToken(Long userId, Provider provider) {
     oauthTokenRepository.findByUserIdAndProvider(userId, provider)
-      .ifPresent(token -> {
-        // Refresh Token이 없으면 완전히 삭제
-        if (token.getRefreshToken() == null) {
-          oauthTokenRepository.delete(token);
-        } else {
-          // Access Token만 null로 설정
-          token.setAccessToken(null);
-          token.setRefreshToken(null);
-          oauthTokenRepository.save(token);
-        }
-      });
+      .ifPresent(oauthTokenRepository::delete);
   }
 }

@@ -86,7 +86,27 @@ public class KakaoOauthService {
       userService.updateUserStatus(userId, Status.DELETED);
 
       log.info("사용자 {}의 카카오 연동 해제 완료", userId);
-      return ResponseEntity.ok("카카오 계정 연결이 해제되었습니다.");
+
+      // 쿠키 삭제
+      ResponseCookie clearAccess = ResponseCookie.from("accessToken", "")
+        .httpOnly(true)
+        .secure(false)
+        .sameSite("Lax")
+        .path("/")
+        .maxAge(0)
+        .build();
+
+      ResponseCookie clearRefresh = ResponseCookie.from("refreshToken", "")
+        .httpOnly(true)
+        .secure(false)
+        .sameSite("Lax")
+        .path("/")
+        .maxAge(0)
+        .build();
+
+      return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, clearAccess.toString(), clearRefresh.toString())
+        .body("카카오 계정 연결이 해제되었습니다.");
 
     } catch (IllegalArgumentException e) {
       log.error("연동 해제 실패: {}", e.getMessage());
