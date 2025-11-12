@@ -2,6 +2,7 @@ package gighub.worketserver.global.filter;
 
 import gighub.worketserver.global.security.token.TokenProvider;
 import gighub.worketserver.global.exception.TokenException;
+import gighub.worketserver.global.util.CookieUtil;
 import gighub.worketserver.service.RefreshTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,7 +27,8 @@ import java.time.LocalDateTime;
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
   private final TokenProvider tokenProvider;
-  private final RefreshTokenService refreshTokenService;  // 추가
+  private final RefreshTokenService refreshTokenService;
+  private final CookieUtil cookieUtil;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -45,7 +47,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
           String newAccessToken = tokenProvider.reissueAccessToken(refreshToken);
           if (StringUtils.hasText(newAccessToken)) {
             setAuthentication(newAccessToken);
-            addCookie(response, "accessToken", newAccessToken, 60 * 30);
+
+            ResponseCookie newAccessCookie =
+              cookieUtil.createTokenCookie("accessToken", newAccessToken, 60 * 30);
+            response.addHeader("Set-Cookie", newAccessCookie.toString());
           }
         } else {
           clearCookies(response);
@@ -84,26 +89,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     return null;
   }
 
-  private void addCookie(HttpServletResponse response, String name, String value, long maxAgeSeconds) {
-    ResponseCookie cookie = ResponseCookie.from(name, value)
-      .httpOnly(true)
-      .secure(false) // 운영 시 true
-      .sameSite("Lax")
-      .path("/")
-      .maxAge(maxAgeSeconds)
-      .build();
-    response.addHeader("Set-Cookie", cookie.toString());
-  }
-
   private void clearCookies(HttpServletResponse response) {
-    ResponseCookie clearAccess = ResponseCookie.from("accessToken", "")
-      .path("/")
-      .maxAge(0)
-      .build();
-    ResponseCookie clearRefresh = ResponseCookie.from("refreshToken", "")
-      .path("/")
-      .maxAge(0)
-      .build();
+    ResponseCookie clearAccess = cookieUtil.createTokenCookie("accessToken", "", 0);
+    ResponseCookie clearRefresh = cookieUtil.createTokenCookie("refreshToken", "", 0);
+
     response.addHeader("Set-Cookie", clearAccess.toString());
     response.addHeader("Set-Cookie", clearRefresh.toString());
   }

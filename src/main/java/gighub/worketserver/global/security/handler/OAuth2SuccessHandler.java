@@ -2,6 +2,7 @@ package gighub.worketserver.global.security.handler;
 
 import gighub.worketserver.global.security.dto.PrincipalDetails;
 import gighub.worketserver.global.security.token.TokenProvider;
+import gighub.worketserver.global.util.CookieUtil;
 import gighub.worketserver.service.OauthTokenService;  // 변경
 import gighub.worketserver.service.RefreshTokenService;  // 추가
 import gighub.worketserver.domain.constants.Provider;
@@ -24,46 +25,22 @@ import java.time.LocalDateTime;
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
   private final TokenProvider tokenProvider;
-  private final OauthTokenService oauthTokenService;
-  private final OAuth2AuthorizedClientService authorizedClientService;
+  private final CookieUtil cookieUtil;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                       Authentication authentication) throws IOException {
-
-    OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
-
-    String registrationId = oauthToken.getAuthorizedClientRegistrationId();
-    Provider provider;
-
-    switch (registrationId.toLowerCase()) {
-      case "kakao" -> provider = Provider.KAKAO;
-      default -> throw new IllegalArgumentException("지원하지 않는 OAuth provider: " + registrationId);
-    }
-
+    
     // 로그인 성공 시 JWT 발급
     String accessToken = tokenProvider.generateAccessToken(authentication);
     String refreshToken = tokenProvider.generateRefreshToken(authentication);
 
-    // Access Token 쿠키 (1시간)
-    ResponseCookie cookie = ResponseCookie.from("accessToken", accessToken)
-      .httpOnly(true)
-      .secure(false)
-      .sameSite("Lax")
-      .path("/")
-      .maxAge(60 * 60)
-      .build();
+    // Access Token 쿠키
+    ResponseCookie accessCookie = cookieUtil.createTokenCookie("accessToken", accessToken, 60 * 60);
+    // Refresh Token 쿠키
+    ResponseCookie refreshCookie = cookieUtil.createTokenCookie("refreshToken", refreshToken, 7 * 24 * 60 * 60);
 
-    // Refresh Token 쿠키 (7일)
-    ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
-      .httpOnly(true)
-      .secure(false)
-      .sameSite("Lax")
-      .path("/")
-      .maxAge(7 * 24 * 60 * 60)
-      .build();
-
-    response.addHeader("Set-Cookie", cookie.toString());
+    response.addHeader("Set-Cookie", accessCookie.toString());
     response.addHeader("Set-Cookie", refreshCookie.toString());
 
     response.sendRedirect("http://localhost:3000");

@@ -3,6 +3,7 @@ package gighub.worketserver.service;
 import gighub.worketserver.global.security.token.TokenProvider;
 import gighub.worketserver.domain.constants.Provider;
 import gighub.worketserver.domain.constants.Status;
+import gighub.worketserver.global.util.CookieUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -19,10 +20,11 @@ import jakarta.servlet.http.HttpServletRequest;
 public class KakaoOauthService {
 
   private final TokenProvider tokenProvider;
-  private final OauthTokenService oauthTokenService;       // 외부 OAuth 토큰 관리
-  private final RefreshTokenService refreshTokenService;   // 내부 JWT 관리
+  private final OauthTokenService oauthTokenService;
+  private final RefreshTokenService refreshTokenService;
   private final UserService userService;
   private final RestTemplate restTemplate;
+  private final CookieUtil cookieUtil;
 
   /** 카카오 로그아웃 */
   public ResponseEntity<String> logout(HttpServletRequest request) {
@@ -37,24 +39,11 @@ public class KakaoOauthService {
       refreshTokenService.revokeAllRefreshTokens(userId);
 
       // 3. 쿠키 삭제
-      ResponseCookie clearAccess = ResponseCookie.from("accessToken", "")
-        .httpOnly(true)
-        .secure(false) // 운영 시 true
-        .sameSite("Lax")
-        .path("/")
-        .maxAge(0)
-        .build();
-
-      ResponseCookie clearRefresh = ResponseCookie.from("refreshToken", "")
-        .httpOnly(true)
-        .secure(false)
-        .sameSite("Lax")
-        .path("/")
-        .maxAge(0)
-        .build();
+      ResponseCookie clearAccessToken = cookieUtil.createTokenCookie("accessToken", "", 0);
+      ResponseCookie clearRefreshToken = cookieUtil.createTokenCookie("refreshToken", "", 0);
 
       return ResponseEntity.ok()
-        .header(HttpHeaders.SET_COOKIE, clearAccess.toString(), clearRefresh.toString())
+        .header(HttpHeaders.SET_COOKIE, clearAccessToken.toString(), clearRefreshToken.toString())
         .body("로그아웃 완료");
 
     } catch (IllegalArgumentException e) {
@@ -87,25 +76,13 @@ public class KakaoOauthService {
 
       log.info("사용자 {}의 카카오 연동 해제 완료", userId);
 
-      // 쿠키 삭제
-      ResponseCookie clearAccess = ResponseCookie.from("accessToken", "")
-        .httpOnly(true)
-        .secure(false)
-        .sameSite("Lax")
-        .path("/")
-        .maxAge(0)
-        .build();
+      // 5. 쿠키 삭제
+      ResponseCookie clearAccessToken = cookieUtil.createTokenCookie("accessToken", "", 0);
+      ResponseCookie clearRefreshToken = cookieUtil.createTokenCookie("refreshToken", "", 0);
 
-      ResponseCookie clearRefresh = ResponseCookie.from("refreshToken", "")
-        .httpOnly(true)
-        .secure(false)
-        .sameSite("Lax")
-        .path("/")
-        .maxAge(0)
-        .build();
 
       return ResponseEntity.ok()
-        .header(HttpHeaders.SET_COOKIE, clearAccess.toString(), clearRefresh.toString())
+        .header(HttpHeaders.SET_COOKIE, clearAccessToken.toString(), clearRefreshToken.toString())
         .body("카카오 계정 연결이 해제되었습니다.");
 
     } catch (IllegalArgumentException e) {
