@@ -16,30 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class OauthTokenService {
 
   private final OauthTokenRepository oauthTokenRepository;
-  private final UserRepository userRepository;
-
-  /** OAuth Access Token 저장 또는 갱신 */
-  @Transactional
-  public void saveOauthAccessToken(String oauthId, String oauthAccessToken, Provider provider) {
-    // oauthId로 사용자 조회
-    User user = userRepository.findById(Long.valueOf(oauthId))
-      .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + oauthId));
-
-    // 기존 토큰 조회 또는 새로 생성
-    OauthToken oauthToken = oauthTokenRepository.findByUserIdAndProvider(user.getId(), provider)
-      .orElseGet(() -> {
-        OauthToken newToken = new OauthToken();
-        newToken.setUserId(user.getId());
-        newToken.setProvider(provider);
-        return newToken;
-      });
-
-    // OAuth Access Token 업데이트
-    oauthToken.updateAccessToken(oauthAccessToken);
-    oauthTokenRepository.save(oauthToken);
-
-    log.info("OAuth Access Token 저장 완료 - UserId: {}, Provider: {}", user.getId(), provider);
-  }
 
   /** OAuth Access Token 조회 */
   @Transactional(readOnly = true)
