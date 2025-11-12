@@ -52,15 +52,21 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
               cookieUtil.createTokenCookie("accessToken", newAccessToken, 60 * 30);
             response.addHeader("Set-Cookie", newAccessCookie.toString());
           }
-        } else {
-          clearCookies(response);
-        }
-      }
 
-      // 3. 두 토큰 모두 유효하지 않음
-      else {
+          // refresh token 만료 임박 여부 확인 후 재발급 (잔여기간 1일 이하)
+          if (refreshTokenService.isExpiringSoon(refreshToken, 24)) {
+            String newRefreshToken = tokenProvider.reissueRefreshToken(refreshToken);
+
+            ResponseCookie refreshCookie = cookieUtil.createTokenCookie("refreshToken", newRefreshToken, 7 * 24 * 60 * 60);
+            response.addHeader("Set-Cookie", refreshCookie.toString());
+            System.out.println("재발급 제발 됐어라");
+          }
+        }  // 3. 두 토큰 모두 유효하지 않음
+      } else {
         clearCookies(response);
       }
+
+
 
     } catch (TokenException e) {
       log.error("토큰 검증 실패: {}", e.getMessage());

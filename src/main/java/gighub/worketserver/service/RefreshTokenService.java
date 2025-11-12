@@ -26,7 +26,6 @@ public class RefreshTokenService {
       .ifPresent(token -> {
         token.revoke();
         userRefreshTokenRepository.save(token);
-        log.info("기존 Refresh Token revoke 처리 - UserId: {}", userId);
       });
 
     // 새 리프레시 토큰 저장
@@ -38,7 +37,6 @@ public class RefreshTokenService {
     newToken.setIsRevoked(false);
 
     userRefreshTokenRepository.save(newToken);
-    log.info("새 Refresh Token 저장 완료 - UserId: {}", userId);
   }
 
   /** JWT Refresh Token 조회 */
@@ -63,7 +61,34 @@ public class RefreshTokenService {
       .ifPresent(token -> {
         token.revoke();
         userRefreshTokenRepository.save(token);
-        log.info("사용자의 모든 Refresh Token revoke 완료 - UserId: {}", userId);
       });
+  }
+
+  @Transactional(readOnly = true)
+  public boolean isExpiringSoon(String refreshToken, int thresholdHours) {
+    return userRefreshTokenRepository.findByRefreshToken(refreshToken)
+      .map(token -> token.getExpiresAt().isBefore(LocalDateTime.now().plusHours(thresholdHours)))
+      .orElse(false);
+  }
+
+  @Transactional
+  public void rotateRefreshToken(String oldRefreshToken, String newRefreshToken) {
+    // 1. 기존 refresh token 찾기
+    UserRefreshToken existing = userRefreshTokenRepository.findByRefreshToken(oldRefreshToken)
+      .orElseThrow(() -> new TokenException(TokenErrorCode.EXPIRED_TOKEN));
+
+    // 2. 기존 토큰 revoke 처리
+    existing.revoke();
+    userRefreshTokenRepository.save(existing);
+
+    // 3. 새 토큰 엔티티 생성 및 저장
+    UserRefreshToken newToken = new UserRefreshToken();
+    newToken.setUserId(existing.getUserId());
+    newToken.setRefreshToken(newRefreshToken);
+    newToken.setIssuedAt(LocalDateTime.now());
+    newToken.setExpiresAt(LocalDateTime.now().plusDays(7)); // 새 만료일
+    newToken.setIsRevoked(false);
+
+    userRefreshTokenRepository.save(newToken);
   }
 }

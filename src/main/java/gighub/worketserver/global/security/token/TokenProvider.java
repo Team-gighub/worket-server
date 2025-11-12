@@ -7,6 +7,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,8 +57,14 @@ public class TokenProvider {
   @Transactional
   public String generateRefreshToken(Authentication authentication) {
     String refreshToken = generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
+
+    Claims claims = parseClaims(refreshToken);
+    LocalDateTime expiresAt = claims.getExpiration()
+      .toInstant()
+      .atZone(ZoneId.systemDefault())
+      .toLocalDateTime();
+
     Long userId = Long.parseLong(authentication.getName());
-    LocalDateTime expiresAt = LocalDateTime.now().plusDays(7);
     refreshTokenService.saveRefreshToken(userId, refreshToken, expiresAt);
     return refreshToken;
   }
@@ -143,5 +150,23 @@ public class TokenProvider {
     } catch (JwtException e) {
       throw new TokenException(INVALID_TOKEN);
     }
+  }
+
+  @Transactional
+  public String reissueRefreshToken(String oldRefreshToken) {
+    if (!validateToken(oldRefreshToken)) {
+      throw new TokenException(INVALID_TOKEN);
+    }
+
+    Authentication authentication = getAuthentication(oldRefreshToken);
+    String newRefreshToken = generateToken(authentication, REFRESH_TOKEN_EXPIRE_TIME);
+
+    Long userId = Long.parseLong(authentication.getName());
+    LocalDateTime expiresAt = LocalDateTime.now()
+      .plusSeconds(REFRESH_TOKEN_EXPIRE_TIME / 1000); // 밀리초 단위 → 초 단위 변환
+
+    refreshTokenService.saveRefreshToken(userId, newRefreshToken, expiresAt);
+
+    return newRefreshToken;
   }
 }
