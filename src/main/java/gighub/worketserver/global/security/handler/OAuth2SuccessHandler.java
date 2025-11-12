@@ -41,13 +41,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
       default -> throw new IllegalArgumentException("지원하지 않는 OAuth provider: " + registrationId);
     }
 
-    OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
-      registrationId,
-      authentication.getName()
-    );
-
-    String oauthAccessToken = client.getAccessToken().getTokenValue();
-
     // 로그인 성공 시 JWT 발급
     String accessToken = tokenProvider.generateAccessToken(authentication);
     String refreshToken = tokenProvider.generateRefreshToken(authentication);
