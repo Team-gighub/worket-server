@@ -24,8 +24,7 @@ import java.time.LocalDateTime;
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
   private final TokenProvider tokenProvider;
-  private final OauthTokenService oauthTokenService;  // 변경
-  private final RefreshTokenService refreshTokenService;  // 추가
+  private final OauthTokenService oauthTokenService;
   private final OAuth2AuthorizedClientService authorizedClientService;
 
   @Override
@@ -55,14 +54,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     // 로그인 성공 시 JWT 발급
     String accessToken = tokenProvider.generateAccessToken(authentication);
     String refreshToken = tokenProvider.generateRefreshToken(authentication);
-
-    // User ID 추출
-    PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
-    Long userId = principalDetails.getUser().getId();
-
-    // JWT Refresh Token을 DB에 저장 (7일 유효기간)
-    LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusDays(7);
-    refreshTokenService.saveRefreshToken(userId, refreshToken, refreshTokenExpiresAt);
 
     // Access Token 쿠키 (1시간)
     ResponseCookie cookie = ResponseCookie.from("accessToken", accessToken)
