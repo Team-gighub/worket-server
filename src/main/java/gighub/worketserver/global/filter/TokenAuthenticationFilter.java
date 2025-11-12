@@ -46,7 +46,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
           if (StringUtils.hasText(newAccessToken)) {
             setAuthentication(newAccessToken);
             addCookie(response, "accessToken", newAccessToken, 60 * 30);
-            log.info("AccessToken 자동 재발급 완료");
           }
         } else {
           clearCookies(response);
