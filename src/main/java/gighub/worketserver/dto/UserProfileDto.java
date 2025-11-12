@@ -1,5 +1,6 @@
 package gighub.worketserver.dto;
 
+import gighub.worketserver.domain.constants.Provider;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,7 +9,7 @@ import lombok.Getter;
 public class UserProfileDto {
     private Long id;
     private String name;
-    private String provider;
+    private Provider provider;
     private String role;
     private String status;
     private String phone;

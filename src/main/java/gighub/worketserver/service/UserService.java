@@ -22,14 +22,15 @@ public class UserService {
     return userRepository.findAll();
   }
 
-  public UserProfileDto getUser(String userId) {
-    User user = userRepository.findById(Long.parseLong(userId))
+  public UserProfileDto getUser(long userId) {
+    User user = userRepository.findById(userId)
       .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
     return UserProfileDto.builder()
       .id(user.getId())
       .name(user.getName())
       .role(user.getRole().name())
+      .provider(user.getProvider())
       .status(user.getStatus().name())
       .phone(user.getPhone())
       .createdAt(user.getCreatedAt().toString())
