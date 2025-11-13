@@ -1,5 +1,6 @@
 package gighub.worketserver.global.filter;
 
+import gighub.worketserver.global.exception.TokenErrorCode;
 import gighub.worketserver.global.security.token.TokenProvider;
 import gighub.worketserver.global.exception.TokenException;
 import gighub.worketserver.global.util.CookieUtil;
@@ -19,7 +20,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -38,11 +38,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     String refreshToken = resolveCookieValue(request, "refreshToken");
 
     try {
+      // 1. access 토큰이 들어있고, 그 토큰이 유효한지 확인
       if (StringUtils.hasText(accessToken) && tokenProvider.validateToken(accessToken)) {
         setAuthentication(accessToken);
-      }
-      else if (StringUtils.hasText(refreshToken)) { // accessToken 만료 또는 없음
-        // refreshToken 유효성 + DB 검증
+      } else if (StringUtils.hasText(refreshToken)) { // accessToken 만료 또는 없음
+        // 2. accessToken이 없을 경우 refreshToken 만료기간과 DB 검증
         if (tokenProvider.validateToken(refreshToken) && refreshTokenService.isValidRefreshToken(refreshToken)) {
           String newAccessToken = tokenProvider.reissueAccessToken(refreshToken);
           if (StringUtils.hasText(newAccessToken)) {
@@ -51,29 +51,32 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             ResponseCookie newAccessCookie =
               cookieUtil.createTokenCookie("accessToken", newAccessToken, 60 * 30);
             response.addHeader("Set-Cookie", newAccessCookie.toString());
+
+            // refresh token 만료 임박 여부 확인 후 재발급 (잔여기간 1일 이하)
+            if (refreshTokenService.isExpiringSoon(refreshToken, 24)) {
+              String newRefreshToken = tokenProvider.reissueRefreshToken(refreshToken);
+
+              ResponseCookie refreshCookie = cookieUtil.createTokenCookie("refreshToken", newRefreshToken, 7 * 24 * 60 * 60);
+              response.addHeader("Set-Cookie", refreshCookie.toString());
+            }
           }
 
-          // refresh token 만료 임박 여부 확인 후 재발급 (잔여기간 1일 이하)
-          if (refreshTokenService.isExpiringSoon(refreshToken, 24)) {
-            String newRefreshToken = tokenProvider.reissueRefreshToken(refreshToken);
-
-            ResponseCookie refreshCookie = cookieUtil.createTokenCookie("refreshToken", newRefreshToken, 7 * 24 * 60 * 60);
-            response.addHeader("Set-Cookie", refreshCookie.toString());
-            System.out.println("재발급 제발 됐어라");
-          }
-        }  // 3. 두 토큰 모두 유효하지 않음
+        }  else {
+          // 3. 두 토큰 모두 기간이 유효하지 않음 => 쿠키를 비워줌 => 다시 로그인 해야함
+          throw new TokenException(TokenErrorCode.EXPIRED_TOKEN);  // 401
+        }
+        // 토큰이 애초에 없음 => 로그인 필요
       } else {
-        clearCookies(response);
+        throw new TokenException(TokenErrorCode.EMPTY_TOKEN);  // 401
       }
 
-
-
     } catch (TokenException e) {
-      log.error("토큰 검증 실패: {}", e.getMessage());
       clearCookies(response);
+      request.setAttribute("exception", e.getErrorCode());
+
     } catch (Exception e) {
-      log.error("인증 처리 중 오류 발생: {}", e.getMessage(), e);
       clearCookies(response);
+      request.setAttribute("exception", TokenErrorCode.INVALID_TOKEN);
     }
 
     filterChain.doFilter(request, response);

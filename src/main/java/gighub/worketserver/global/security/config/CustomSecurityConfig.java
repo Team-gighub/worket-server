@@ -2,11 +2,12 @@ package gighub.worketserver.global.security.config;
 
 import gighub.worketserver.global.filter.TokenAuthenticationFilter;
 import gighub.worketserver.global.security.converter.KakaoTokenResponseConverter;
+import gighub.worketserver.global.security.handler.CustomAccessDeniedHandler;
+import gighub.worketserver.global.security.handler.CustomAuthenticationEntryPoint;
 import gighub.worketserver.global.security.resolver.CustomAuthorizationRequestResolver;
 import gighub.worketserver.global.security.handler.OAuth2SuccessHandler;
 import gighub.worketserver.global.security.service.CustomOAuth2UserService;
 import gighub.worketserver.global.security.repository.CustomAuthorizationRequestRepository;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +41,8 @@ public class CustomSecurityConfig {
   private final CustomOAuth2UserService customOAuth2UserService;
   private final OAuth2SuccessHandler oAuth2SuccessHandler;
   private final TokenAuthenticationFilter tokenAuthenticationFilter;
+  private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+  private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
   @Bean
   public SecurityFilterChain filterChain(
@@ -72,11 +75,9 @@ public class CustomSecurityConfig {
       )
 
       .exceptionHandling(ex -> ex
-        .authenticationEntryPoint((request, response, authException) -> {
-          response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        })
+        .authenticationEntryPoint(customAuthenticationEntryPoint)
+        .accessDeniedHandler(customAccessDeniedHandler)
       )
-
       .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();

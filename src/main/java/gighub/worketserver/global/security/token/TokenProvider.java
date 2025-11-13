@@ -39,6 +39,7 @@ public class TokenProvider {
 
   private SecretKey secretKey;
 
+
   private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 30; // 30분
   private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000L * 60 * 60 * 24 * 7; // 7일
   private static final String KEY_ROLE = "role";
@@ -130,6 +131,9 @@ public class TokenProvider {
     try {
       Claims claims = parseClaims(token);
       return claims.getExpiration().after(new Date());
+    } catch (ExpiredJwtException e) {
+      log.warn("토큰 검증 실패: {}", e.getMessage()); // log는 나중에 지울 예정
+      throw new TokenException(EXPIRED_TOKEN);
     } catch (Exception e) {
       log.warn("토큰 검증 실패: {}", e.getMessage());
       return false;
@@ -138,18 +142,11 @@ public class TokenProvider {
 
   /** JWT 파싱 */
   private Claims parseClaims(String token) {
-    try {
-      return Jwts.parser()
-        .verifyWith(secretKey)
-        .build()
-        .parseSignedClaims(token)
-        .getPayload();
-    } catch (ExpiredJwtException e) {
-      log.warn("만료된 토큰입니다.");
-      return e.getClaims();
-    } catch (JwtException e) {
-      throw new TokenException(INVALID_TOKEN);
-    }
+    return Jwts.parser()
+      .verifyWith(secretKey)
+      .build()
+      .parseSignedClaims(token)
+      .getPayload();
   }
 
   @Transactional
