@@ -134,6 +134,11 @@ public class TokenProvider {
     } catch (ExpiredJwtException e) {
       log.warn("토큰 검증 실패: {}", e.getMessage()); // log는 나중에 지울 예정
       throw new TokenException(EXPIRED_TOKEN);
+
+    } catch (UnsupportedJwtException | MalformedJwtException | SecurityException | IllegalArgumentException e) {
+      // 서명 위조, 포맷 깨짐, 지원하지 않는 형식 등
+      throw new TokenException(INVALID_TOKEN); // 또는 INVALID_JWT_SIGNATURE
+
     } catch (Exception e) {
       log.warn("토큰 검증 실패: {}", e.getMessage());
       return false;
