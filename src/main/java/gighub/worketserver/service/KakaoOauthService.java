@@ -1,9 +1,11 @@
 package gighub.worketserver.service;
 
+import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.global.security.token.TokenProvider;
 import gighub.worketserver.domain.constants.Provider;
 import gighub.worketserver.domain.constants.Status;
 import gighub.worketserver.global.util.CookieUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -26,38 +28,39 @@ public class KakaoOauthService {
   private final RestTemplate restTemplate;
   private final CookieUtil cookieUtil;
 
-  /** 카카오 로그아웃 */
-  public ResponseEntity<String> logout(HttpServletRequest request) {
+  public ApiResponse<String> logout(HttpServletRequest request, HttpServletResponse response) {
     try {
       Long userId = extractUserIdFromJwt(request);
       String kakaoAccessToken = getKakaoAccessToken(userId);
 
-      // 1. 카카오 로그아웃 요청
+      // 카카오 로그아웃
       callKakaoApi("https://kapi.kakao.com/v1/user/logout", kakaoAccessToken);
 
-      // 2. 내부 JWT RefreshToken revoke
+      // 내부 refreshToken 폐기
       refreshTokenService.revokeAllRefreshTokens(userId);
 
-      // 3. 쿠키 삭제
-      ResponseCookie clearAccessToken = cookieUtil.createTokenCookie("accessToken", "", 0);
-      ResponseCookie clearRefreshToken = cookieUtil.createTokenCookie("refreshToken", "", 0);
+      // 쿠키 삭제
+      ResponseCookie clearAccess = cookieUtil.createTokenCookie("accessToken", "", 0);
+      ResponseCookie clearRefresh = cookieUtil.createTokenCookie("refreshToken", "", 0);
 
-      return ResponseEntity.ok()
-        .header(HttpHeaders.SET_COOKIE, clearAccessToken.toString(), clearRefreshToken.toString())
-        .body("로그아웃 완료");
+      response.addHeader(HttpHeaders.SET_COOKIE, clearAccess.toString());
+      response.addHeader(HttpHeaders.SET_COOKIE, clearRefresh.toString());
+
+      return ApiResponse.ok("로그아웃 완료");
 
     } catch (IllegalArgumentException e) {
-      return ResponseEntity.badRequest().body(e.getMessage());
+      return ApiResponse.error(e.getMessage());
+
     } catch (RestClientException e) {
-      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-        .body("카카오 서버와 통신 중 오류가 발생했습니다.");
+      return ApiResponse.error("카카오 서버와 통신 중 오류가 발생했습니다.");
+
     } catch (Exception e) {
-      return ResponseEntity.internalServerError().body("로그아웃 중 오류가 발생했습니다.");
+      return ApiResponse.error("로그아웃 중 오류가 발생했습니다.");
     }
   }
 
   /** 카카오 연결 해제 */
-  public ResponseEntity<String> unlink(HttpServletRequest request) {
+  public ApiResponse<String> unlink(HttpServletRequest request, HttpServletResponse response) {
     try {
       Long userId = extractUserIdFromJwt(request);
       String kakaoAccessToken = getKakaoAccessToken(userId);
@@ -68,33 +71,34 @@ public class KakaoOauthService {
       // 2. 외부 OAuth 토큰 삭제
       oauthTokenService.deleteOauthAccessToken(userId, Provider.KAKAO);
 
-      // 3. 내부 RefreshToken 모두 revoke
+      // 3. 내부 RefreshToken 모두 폐기
       refreshTokenService.revokeAllRefreshTokens(userId);
 
       // 4. 사용자 상태 변경
       userService.updateUserStatus(userId, Status.DELETED);
 
-      log.info("사용자 {}의 카카오 연동 해제 완료", userId);
-
       // 5. 쿠키 삭제
       ResponseCookie clearAccessToken = cookieUtil.createTokenCookie("accessToken", "", 0);
       ResponseCookie clearRefreshToken = cookieUtil.createTokenCookie("refreshToken", "", 0);
 
+      response.addHeader(HttpHeaders.SET_COOKIE, clearAccessToken.toString());
+      response.addHeader(HttpHeaders.SET_COOKIE, clearRefreshToken.toString());
 
-      return ResponseEntity.ok()
-        .header(HttpHeaders.SET_COOKIE, clearAccessToken.toString(), clearRefreshToken.toString())
-        .body("카카오 계정 연결이 해제되었습니다.");
+      log.info("사용자 {} 카카오 연동 해제 완료", userId);
+
+      return ApiResponse.ok("카카오 계정 연결이 해제되었습니다.");
 
     } catch (IllegalArgumentException e) {
       log.error("연동 해제 실패: {}", e.getMessage());
-      return ResponseEntity.badRequest().body(e.getMessage());
+      return ApiResponse.error(e.getMessage());
+
     } catch (RestClientException e) {
       log.error("카카오 API 호출 실패", e);
-      return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-        .body("카카오 서버와 통신 중 오류가 발생했습니다.");
+      return ApiResponse.error("카카오 서버와 통신 중 오류가 발생했습니다.");
+
     } catch (Exception e) {
       log.error("연동 해제 중 오류", e);
-      return ResponseEntity.internalServerError().body("연동 해제 중 오류가 발생했습니다.");
+      return ApiResponse.error("연동 해제 중 오류가 발생했습니다.");
     }
   }
 
