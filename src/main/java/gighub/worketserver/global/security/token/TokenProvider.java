@@ -110,16 +110,6 @@ public class TokenProvider {
                 .compact();
     }
 
-    /**
-     * JWT에서 Authentication 복원
-     */
-//    public Authentication getAuthentication(String token) {
-//        Claims claims = parseClaims(token);
-//        List<SimpleGrantedAuthority> authorities = Collections.singletonList(
-//                new SimpleGrantedAuthority(claims.get(KEY_ROLE).toString()));
-//        User principal = new User(claims.getSubject(), "", authorities);
-//        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
-//    }
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
 
