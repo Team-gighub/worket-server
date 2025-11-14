@@ -1,6 +1,7 @@
 package gighub.worketserver.dto;
 
 import lombok.*;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -10,6 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class StatisticsResponse {
-    private List<YearProfitDto> currentYearProfit;
-    private List<MonthlyStatisticsDto> statistics;
+  private List<YearProfitDto> currentYearProfit;
+  private List<MonthlyStatisticsDto> statistics;
 }

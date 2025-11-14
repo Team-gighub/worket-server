@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ContractExtractResponse {
-    private ContractInfoDto contractInfo;
-    private ClientInfoDto clientInfo;
-    private FreelancerInfoDto freelancerInfo;
+  private ContractInfoDto contractInfo;
+  private ClientInfoDto clientInfo;
+  private FreelancerInfoDto freelancerInfo;
 }

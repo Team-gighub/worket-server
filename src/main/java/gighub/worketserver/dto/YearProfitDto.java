@@ -1,6 +1,7 @@
 package gighub.worketserver.dto;
 
 import lombok.*;
+
 import java.math.BigDecimal;
 
 @Getter
@@ -9,6 +10,6 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class YearProfitDto {
-    private BigDecimal incomes;
-    private Integer transactions;  // Integer로 변경
+  private BigDecimal incomes;
+  private Integer transactions;  // Integer로 변경
 }

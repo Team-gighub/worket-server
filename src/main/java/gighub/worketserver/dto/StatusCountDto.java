@@ -8,6 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class StatusCountDto {
-    private String status;
-    private Integer count;
+  private String status;
+  private Integer count;
 }

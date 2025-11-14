@@ -8,5 +8,5 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class PasscodeVerifyRequest {
-    private String passcode;
+  private String passcode;
 }

@@ -8,5 +8,5 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SignatureRequest {
-    private String signatureUrl;
+  private String signatureUrl;
 }

@@ -17,15 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/statistics")
 public class StatisticsController {
 
-    private final StatisticsService statisticsService;
+  private final StatisticsService statisticsService;
 
-    /**
-     * 통계 조회 (소득관리 탭)
-     * GET /statistics
-     */
-    @GetMapping
-    public ApiResponse<StatisticsResponse> getStatistics(Authentication authentication) {
-        StatisticsResponse response = statisticsService.getStatistics(authentication);
-        return ApiResponse.ok(response);
-    }
+  /**
+   * 통계 조회 (소득관리 탭)
+   * GET /statistics
+   */
+  @GetMapping
+  public ApiResponse<StatisticsResponse> getStatistics(Authentication authentication) {
+    StatisticsResponse response = statisticsService.getStatistics(authentication);
+    return ApiResponse.ok(response);
+  }
 }

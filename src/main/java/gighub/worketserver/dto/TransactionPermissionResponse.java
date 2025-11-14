@@ -8,6 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class TransactionPermissionResponse {
-    private String userRole;
-    private Boolean permission;
+  private String userRole;
+  private Boolean permission;
 }

@@ -8,8 +8,8 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class FreelancerInfoDto {
-    private String name;
-    private String phone;
-    private String account;
-    private String bank;
+  private String name;
+  private String phone;
+  private String account;
+  private String bank;
 }

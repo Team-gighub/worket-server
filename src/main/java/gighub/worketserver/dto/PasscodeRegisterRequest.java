@@ -8,5 +8,5 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class PasscodeRegisterRequest {
-    private String pin;
+  private String pin;
 }

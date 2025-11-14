@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class TransactionPreviewResponse {
-    private String freelancerName;
-    private String clientName;
-    private String title;
+  private String freelancerName;
+  private String clientName;
+  private String title;
 }

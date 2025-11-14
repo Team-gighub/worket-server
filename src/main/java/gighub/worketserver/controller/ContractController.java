@@ -20,49 +20,51 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/contracts")
 public class ContractController {
 
-    private final ContractService contractService;
+  private final ContractService contractService;
 
-    /**
-     * 계약서 추출 (OCR + LLM)
-     * POST /contracts/extract
-     */
-    @PostMapping("/extract")
-    public ApiResponse<ContractExtractResponse> extractContract(
-            Authentication authentication,
-            @RequestParam("file") MultipartFile file
-    ) {
-        ContractExtractResponse response = contractService.extractContract(authentication, file);
-        return ApiResponse.ok(response);
-    }
+  /**
+   * 계약서 추출 (OCR + LLM)
+   * POST /contracts/extract
+   */
+  @PostMapping("/extract")
+  public ApiResponse<ContractExtractResponse> extractContract(
+    Authentication authentication,
+    @RequestParam("file") MultipartFile file
+  ) {
+    ContractExtractResponse response = contractService.extractContract(authentication, file);
+    return ApiResponse.ok(response);
+  }
 
-    /**
-     * 계약서 등록
-     * POST /contracts
-     * @return 201 Created // ResponseEntity로 상태코드를 명시하면 더 RESTful
-     */
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<ContractCreateResponse> createContract(
-            Authentication authentication,
-            @RequestBody ContractCreateRequest request
-    ) {
-        ContractCreateResponse response = contractService.createContract(authentication, request);
-        return ApiResponse.ok(response);
-    }
+  /**
+   * 계약서 등록
+   * POST /contracts
+   *
+   * @return 201 Created // ResponseEntity로 상태코드를 명시하면 더 RESTful
+   */
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public ApiResponse<ContractCreateResponse> createContract(
+    Authentication authentication,
+    @RequestBody ContractCreateRequest request
+  ) {
+    ContractCreateResponse response = contractService.createContract(authentication, request);
+    return ApiResponse.ok(response);
+  }
 
-    /**
-     * 서명 등록
-     * POST /contracts/{contractId}/signatures
-     * @return 201 Created // ResponseEntity로 상태코드를 명시하면 더 RESTful
-     */
-    @PostMapping("/{contractId}/signatures")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<Void> registerSignature(
-            Authentication authentication,
-            @PathVariable Long contractId,
-            @RequestBody SignatureRequest request
-    ) {
-        contractService.registerSignature(authentication, contractId, request);
-        return ApiResponse.ok(null);
-    }
+  /**
+   * 서명 등록
+   * POST /contracts/{contractId}/signatures
+   *
+   * @return 201 Created // ResponseEntity로 상태코드를 명시하면 더 RESTful
+   */
+  @PostMapping("/{contractId}/signatures")
+  @ResponseStatus(HttpStatus.CREATED)
+  public ApiResponse<Void> registerSignature(
+    Authentication authentication,
+    @PathVariable Long contractId,
+    @RequestBody SignatureRequest request
+  ) {
+    contractService.registerSignature(authentication, contractId, request);
+    return ApiResponse.ok(null);
+  }
 }

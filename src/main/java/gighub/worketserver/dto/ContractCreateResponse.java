@@ -8,5 +8,5 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ContractCreateResponse {
-    private Long transactionId;
+  private Long transactionId;
 }
