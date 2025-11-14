@@ -32,7 +32,7 @@ public class KakaoOauthController {
   }
 
   /** 카카오 OAuth Access Token 갱신 */
-  @PostMapping("/token/kakao/refresh")
+  @PostMapping("/token/refresh")
   public ApiResponse<?> refreshKakaoAccessToken(@RequestParam Long userId) {
     try {
       String newAccessToken = kakaoTokenRefreshService.refreshKakaoAccessToken(userId);
