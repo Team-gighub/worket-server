@@ -57,6 +57,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
       ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 
     String state = customAuthorizationRequestRepository.getSavedState(request);
+    System.out.println("스테이트 왜 고장 " + state);
 
     String registrationId = userRequest.getClientRegistration().getRegistrationId();
     String userNameAttributeName = userRequest.getClientRegistration()
@@ -65,7 +66,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfo.of(registrationId, oAuth2UserAttributes);
 
     // 사용자 조회 또는 생성
-    User user = getOrSave(oAuth2UserInfo, state,registrationId);
+    User user = getOrSave(oAuth2UserInfo, state, registrationId);
 
     // OAuth 토큰 저장 또는 업데이트
     saveOrUpdateOauthToken(

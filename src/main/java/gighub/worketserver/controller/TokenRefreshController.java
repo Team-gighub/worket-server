@@ -16,7 +16,7 @@ public class TokenRefreshController {
   private final KakaoTokenRefreshService kakaoTokenRefreshService;
 
   /** 카카오 OAuth Access Token 갱신 */
-  @GetMapping("/refresh")
+  @PostMapping("/refresh")
   public ApiResponse<?> refreshKakaoAccessToken(@RequestParam Long userId) {
     try {
       String newAccessToken = kakaoTokenRefreshService.refreshKakaoAccessToken(userId);
