@@ -75,7 +75,8 @@ public class KakaoOauthService {
       refreshTokenService.revokeAllRefreshTokens(userId);
 
       // 4. 사용자 상태 변경
-      userService.updateUserStatus(userId, Status.DELETED);
+      // TODO: userService.updateUserStatus(userId, Status.DELETED);
+      log.info("User {} status should be updated to DELETED", userId);
 
       // 5. 쿠키 삭제
       ResponseCookie clearAccessToken = cookieUtil.createTokenCookie("accessToken", "", 0);
