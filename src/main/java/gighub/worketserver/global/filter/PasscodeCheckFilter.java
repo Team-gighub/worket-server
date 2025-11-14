@@ -27,7 +27,8 @@ public class PasscodeCheckFilter extends OncePerRequestFilter {
 
     // 로그인/토큰 재발급/공개 API 는 패스코드 검사 제외
     if (uri.startsWith("/oauth2")
-      || uri.startsWith("/auth")) {
+      || uri.startsWith("/auth")
+      || uri.startsWith("/test")) {
       return true;
     }
 

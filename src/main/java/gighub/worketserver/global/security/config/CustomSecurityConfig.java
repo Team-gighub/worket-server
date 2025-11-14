@@ -83,10 +83,10 @@ public class CustomSecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
                         .accessDeniedHandler(customAccessDeniedHandler)
-                );
-//                .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        // Passcode 필터는 JWT 인증 후
-//                .addFilterBefore(passcodeCheckFilter, AuthorizationFilter.class);
+                )
+                .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // Passcode 필터는 JWT 인증 후
+                .addFilterBefore(passcodeCheckFilter, AuthorizationFilter.class);
 
         return http.build();
     }
