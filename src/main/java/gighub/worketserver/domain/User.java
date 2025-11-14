@@ -50,6 +50,9 @@ public class User {
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @Column(name = "passcode")
+    private String passcode;
+
     @PrePersist
     public void prePersist() {
         if (this.phone == null) {
