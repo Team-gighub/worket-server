@@ -77,7 +77,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
       refreshTokenExpiresAt
     );
 
-    return new PrincipalDetails(user, oAuth2UserAttributes, userNameAttributeName);
+    return new PrincipalDetails(user, oAuth2UserAttributes);
   }
 
   private User getOrSave(OAuth2UserInfo oAuth2UserInfo, String state, String registrationId) {

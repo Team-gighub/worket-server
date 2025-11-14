@@ -31,7 +31,15 @@ public class UserController {
             UserProfileDto profile = userService.getUser(Long.parseLong(userId));
             return ApiResponse.ok(profile);
         } catch (Exception e) {
-            return ApiResponse.error("마이페이지 조회 중 오류가 발생했습니다: " + e.getMessage());
+            return ApiResponse.error(
+                    "마이페이지 조회 중 오류가 발생했습니다: " + e.getMessage(),
+                    "SERVER_5000"
+            );
         }
+    }
+
+    @GetMapping("/test")
+    public ApiResponse<String> test(Authentication authentication) {
+        return ApiResponse.ok("hi");
     }
 }

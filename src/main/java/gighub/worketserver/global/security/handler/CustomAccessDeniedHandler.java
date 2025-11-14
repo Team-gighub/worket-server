@@ -16,18 +16,18 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
-  private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
-  @Override
-  public void handle(HttpServletRequest request, HttpServletResponse response,
-                     AccessDeniedException accessDeniedException) throws IOException {
+    @Override
+    public void handle(HttpServletRequest request, HttpServletResponse response,
+                       AccessDeniedException accessDeniedException) throws IOException {
 
-    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-    response.setCharacterEncoding("UTF-8");
-    response.setStatus(HttpServletResponse.SC_FORBIDDEN);  // 403
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);  // 403
 
-    ApiResponse<Void> errorResponse = ApiResponse.error("접근 권한이 없습니다.");
+        ApiResponse<Void> errorResponse = ApiResponse.error("접근 권한이 없습니다.", "AUTH_1401");
 
-    response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
-  }
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+    }
 }
