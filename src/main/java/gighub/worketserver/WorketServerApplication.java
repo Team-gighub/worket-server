@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class WorketServerApplication {
 
-  public static void main(String[] args) {
-    SpringApplication.run(WorketServerApplication.class,args);
-  }
+	public static void main(String[] args) {
+		SpringApplication.run(WorketServerApplication.class, args);
+	}
 }
