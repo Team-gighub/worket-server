@@ -61,7 +61,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             }
           }
 
-        }  else {
+        } else {
           // 3. 두 토큰 모두 기간이 유효하지 않음 => 쿠키를 비워줌 => 다시 로그인 해야함
           throw new TokenException(TokenErrorCode.EXPIRED_TOKEN);  // 401
         }
@@ -73,10 +73,13 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     } catch (TokenException e) {
       clearCookies(response);
       request.setAttribute("exception", e.getErrorCode());
+      throw new TokenException(e.getErrorCode());
 
     } catch (Exception e) {
       clearCookies(response);
       request.setAttribute("exception", TokenErrorCode.INVALID_TOKEN);
+
+      throw new TokenException(TokenErrorCode.INVALID_TOKEN);
     }
 
     filterChain.doFilter(request, response);
