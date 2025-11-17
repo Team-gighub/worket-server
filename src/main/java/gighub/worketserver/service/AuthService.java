@@ -1,9 +1,8 @@
 package gighub.worketserver.service;
 
-import gighub.worketserver.domain.Passcode;
+import gighub.worketserver.domain.User;
 import gighub.worketserver.dto.PasscodeRegisterRequest;
 import gighub.worketserver.dto.PasscodeVerifyRequest;
-import gighub.worketserver.repository.PasscodeRepository;
 import gighub.worketserver.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
   private final UserRepository userRepository;
-  private final PasscodeRepository passcodeRepository;
 
   /**
    * 로그아웃
@@ -69,13 +67,12 @@ public class AuthService {
     Long userId = Long.parseLong(authentication.getName());
     log.info("Registering passcode for user {}", userId);
 
-    // Mock: 간편 비밀번호 저장
-    Passcode passcode = Passcode.builder()
-      .userId(userId)
-      .pin(request.getPin()) // 실제로는 해시값을 저장
-      .build();
+    User user = userRepository.findById(userId)
+      .orElseThrow(() -> new RuntimeException("User not found"));
 
-    passcodeRepository.save(passcode);
+    // 실제로는 해시값을 저장해야 함
+    user.updatePasscode(request.getPin());
+    userRepository.save(user);
   }
 
   /**
@@ -85,11 +82,14 @@ public class AuthService {
     Long userId = Long.parseLong(authentication.getName());
     log.info("Verifying passcode for user {}", userId);
 
-    // Mock: 간편 비밀번호 검증
-    Passcode passcode = passcodeRepository.findByUserId(userId)
-      .orElseThrow(() -> new RuntimeException("Passcode not found"));
+    User user = userRepository.findById(userId)
+      .orElseThrow(() -> new RuntimeException("User not found"));
 
-    if (!passcode.getPin().equals(request.getPasscode())) {
+    if (user.getPasscode() == null) {
+      throw new RuntimeException("Passcode not registered");
+    }
+
+    if (!user.getPasscode().equals(request.getPasscode())) {
       throw new RuntimeException("Invalid passcode");
     }
   }

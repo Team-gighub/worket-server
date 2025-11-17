@@ -3,7 +3,6 @@ package gighub.worketserver.service;
 import gighub.worketserver.domain.Contract;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.User;
-import gighub.worketserver.domain.constants.ContractType;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
 import gighub.worketserver.repository.ContractRepository;
@@ -71,7 +70,7 @@ public class ContractService {
     // User 조회
     User freelancer = userRepository.findById(userId)
       .orElseThrow(() -> new RuntimeException("User not found"));
-    
+
     // Mock: Contract 생성
     Contract contract = Contract.builder()
       .type(request.getType())
@@ -79,10 +78,7 @@ public class ContractService {
       .amount(request.getContractInfo().getAmount())
       .startDate(LocalDate.parse(request.getContractInfo().getStartDate()))
       .endDate(LocalDate.parse(request.getContractInfo().getEndDate()))
-      .freelancerName(request.getFreelancerInfo().getName())
-      .freelancerPhone(request.getFreelancerInfo().getPhone())
-      .freelancerAccount(request.getFreelancerInfo().getAccount())
-      .freelancerBank(request.getFreelancerInfo().getBank())
+      .freelancer(freelancer)  // User 객체로 설정
       .clientName(request.getClientInfo().getName())
       .clientPhone(request.getClientInfo().getPhone())
       .build();
@@ -92,7 +88,9 @@ public class ContractService {
     // Mock: Transaction 생성
     Transaction transaction = Transaction.builder()
       .contract(savedContract)
-      .freelancer(freelancer)  // User 객체로 설정
+      .amount(request.getContractInfo().getAmount())
+      .freelancerBank(request.getFreelancerInfo().getBank())
+      .freelancerAccount(request.getFreelancerInfo().getAccount())
       .status(TransactionStatus.CREATED)
       .createdAt(LocalDateTime.now())
       .build();
