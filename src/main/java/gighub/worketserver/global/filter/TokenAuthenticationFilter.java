@@ -54,14 +54,20 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
             // refresh token 만료 임박 여부 확인 후 재발급 (잔여기간 1일 이하)
             if (refreshTokenService.isExpiringSoon(refreshToken, 24)) {
+              // 1. 새 refresh 토큰 문자열 생성 (JWT)
               String newRefreshToken = tokenProvider.reissueRefreshToken(refreshToken);
 
-              ResponseCookie refreshCookie = cookieUtil.createTokenCookie("refreshToken", newRefreshToken, 7 * 24 * 60 * 60);
+              // 2. DB에서 old -> new 로 회전
+              refreshTokenService.rotateRefreshToken(refreshToken, newRefreshToken);
+
+              // 3. 쿠키에도 새 refresh 토큰 심기
+              ResponseCookie refreshCookie =
+                cookieUtil.createTokenCookie("refreshToken", newRefreshToken, 7 * 24 * 60 * 60);
               response.addHeader("Set-Cookie", refreshCookie.toString());
             }
           }
 
-        }  else {
+        } else {
           // 3. 두 토큰 모두 기간이 유효하지 않음 => 쿠키를 비워줌 => 다시 로그인 해야함
           throw new TokenException(TokenErrorCode.EXPIRED_TOKEN);  // 401
         }
