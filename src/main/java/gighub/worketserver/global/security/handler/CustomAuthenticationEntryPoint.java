@@ -1,9 +1,7 @@
 package gighub.worketserver.global.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gighub.worketserver.global.exception.ErrorCode;
-import gighub.worketserver.global.exception.PasscodeException;
-import gighub.worketserver.global.exception.TokenErrorCode;
+import gighub.worketserver.global.exception.*;
 import gighub.worketserver.global.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,35 +20,44 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
   private final ObjectMapper objectMapper;
 
   @Override
-  public void commence(HttpServletRequest request,
-                       HttpServletResponse response,
+  public void commence(HttpServletRequest request, HttpServletResponse response,
                        AuthenticationException authException) throws IOException {
 
-    // 1) 필터에서 미리 실어둔 에러코드가 있는지 확인
-    Object attr = request.getAttribute("exception");
-    ErrorCode errorCode = null;
+    Object ex = request.getAttribute("exception");
 
-    if (attr instanceof ErrorCode e) {
-      errorCode = e;
+    int status;
+    String message;
+    String code;
+
+    if (ex instanceof TokenErrorCode token) {
+      status = token.getHttpStatus().value();
+      message = token.getMessage();
+      code = token.getCode();
+    } else if (ex instanceof PasscodeErrorCode pass) {
+      status = pass.getHttpStatus().value();
+      message = pass.getMessage();
+      code = pass.getCode();
+
+    } else if (ex instanceof ProfileErrorCode profile) {
+      status = profile.getHttpStatus().value();
+      message = profile.getMessage();
+      code = profile.getCode();
+
+    } else {
+      // 둘 다 아니면 기본값
+      status = 401;
+      message = authException.getMessage() != null
+        ? authException.getMessage()
+        : "인증이 필요합니다.";
+      code = "UNAUTHORIZED";
     }
 
-    // 2) 없으면 authException 타입으로 판단
-    if (errorCode == null && authException instanceof PasscodeException pe) {
-      errorCode = pe.getErrorCode();
-    }
-
-    // 3) 그래도 없으면 기본값
-    if (errorCode == null) {
-      errorCode = TokenErrorCode.INVALID_TOKEN;
-    }
-
+    response.setStatus(status);
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response.setCharacterEncoding("UTF-8");
-    response.setStatus(errorCode.getHttpStatus().value());
 
-    ApiResponse<Void> errorResponse =
-      ApiResponse.error(errorCode.getMessage(), errorCode.getCode());
+    ApiResponse<Void> body = ApiResponse.error(message, code);
 
-    response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+    response.getWriter().write(objectMapper.writeValueAsString(body));
   }
 }
