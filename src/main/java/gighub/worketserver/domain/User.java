@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "user")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -71,5 +70,10 @@ public class User {
     int mid = (int) (Math.random() * 9000) + 1000; // 1000~9999
     int end = (int) (Math.random() * 9000) + 1000; // 1000~9999
     return String.format("010-%04d-%04d", mid, end);
+  }
+
+  public void updatePasscode(String encodedPasscode) {
+    this.passcode = encodedPasscode;
+    this.updatedAt = LocalDateTime.now();
   }
 }

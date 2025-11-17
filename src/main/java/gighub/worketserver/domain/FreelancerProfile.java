@@ -9,7 +9,6 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "freelancer_profile")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder

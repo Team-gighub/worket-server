@@ -53,7 +53,6 @@ public class Contract {
   @Column(name = "client_sign", length = 255)
   private String clientSign;
 
-
   @Column(name = "start_date")
   private LocalDate startDate;
 
