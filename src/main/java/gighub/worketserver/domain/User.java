@@ -66,10 +66,23 @@ public class User {
     }
   }
 
-  private String generateRandomPhone() {
+  private static String generateRandomPhone() {
     int mid = (int) (Math.random() * 9000) + 1000; // 1000~9999
     int end = (int) (Math.random() * 9000) + 1000; // 1000~9999
     return String.format("010-%04d-%04d", mid, end);
+  }
+
+  public static User create(Provider provider, String oauthId, String name, Role role) {
+    return User.builder()
+      .provider(provider)
+      .oauthId(oauthId)
+      .name(name)
+      .role(role)
+      .status(Status.ACTIVE)
+      .phone(generateRandomPhone())
+      .createdAt(LocalDateTime.now())
+      .updatedAt(LocalDateTime.now())
+      .build();
   }
 
   public void updatePasscode(String encodedPasscode) {

@@ -20,9 +20,8 @@ public class UserRefreshToken {
   @Column(name = "refresh_token_id")
   private Long refreshTokenId;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
+  @Column(name = "user_id", nullable = false)
+  private Long userId;
 
   @Column(name = "refresh_token", nullable = false, length = 512)
   private String refreshToken;
@@ -46,5 +45,15 @@ public class UserRefreshToken {
 
   public boolean isValid() {
     return !Boolean.TRUE.equals(isRevoked) && !isExpired();
+  }
+
+  public static UserRefreshToken create(Long userId, String refreshToken, LocalDateTime expiresAt) {
+    UserRefreshToken token = new UserRefreshToken();
+    token.userId = userId;
+    token.refreshToken = refreshToken;
+    token.issuedAt = LocalDateTime.now();
+    token.expiresAt = expiresAt;
+    token.isRevoked = false;
+    return token;
   }
 }

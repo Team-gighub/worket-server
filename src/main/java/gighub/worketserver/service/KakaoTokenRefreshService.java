@@ -68,8 +68,8 @@ public class KakaoTokenRefreshService {
           ? LocalDateTime.now().plusSeconds(refreshExpiresIn)
           : null;
 
-        oauthToken.setRefreshToken(newRefreshToken);
-        oauthToken.setRefreshTokenExpiresAt(refreshExpiresAt);
+        oauthToken.updateRefreshToken(newRefreshToken);
+        oauthToken.updateRefreshTokenExpiresAt(refreshExpiresAt);
       }
 
       oauthTokenRepository.save(oauthToken);
