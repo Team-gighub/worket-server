@@ -71,7 +71,7 @@ public class AuthService {
       .orElseThrow(() -> new RuntimeException("User not found"));
 
     // 실제로는 해시값을 저장해야 함
-    user.setPasscode(request.getPin());
+    user.updatePasscode(request.getPin());
     userRepository.save(user);
   }
 
