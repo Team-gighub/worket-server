@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class ApiResponse<T> {
-
+  
   private static final String SUCCESS = "success";
   private static final String ERROR = "error";
 
