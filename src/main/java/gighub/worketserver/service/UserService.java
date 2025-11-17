@@ -1,56 +1,87 @@
 package gighub.worketserver.service;
 
 import gighub.worketserver.domain.User;
-import gighub.worketserver.domain.constants.Status;
+import gighub.worketserver.domain.constants.Gender;
+import gighub.worketserver.domain.constants.Role;
+import gighub.worketserver.dto.UserDetailDto;
 import gighub.worketserver.dto.UserProfileDto;
+import gighub.worketserver.dto.UserUpdateDto;
 import gighub.worketserver.dto.UserUpdateRequest;
 import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 사용자(User) 관련 비즈니스 로직 Service
+ */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserService {
-
   private final UserRepository userRepository;
 
+  /**
+   * 모든 사용자 조회 (관리자용)
+   */
   public List<User> findAllUsers() {
     return userRepository.findAll();
   }
 
-  public UserProfileDto getUser(long userId) {
+  /**
+   * 사용자 프로필 조회 (마이페이지)
+   */
+  public UserProfileDto getUser(Long userId) {
     User user = userRepository.findById(userId)
-      .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+      .orElseThrow(() -> new RuntimeException("User not found"));
 
     return UserProfileDto.builder()
-      .id(user.getId())
+      .id(user.getId())  // userId -> id로 변경
       .name(user.getName())
-      .role(user.getRole().name())
       .provider(user.getProvider())
+      .role(user.getRole().name())
       .status(user.getStatus().name())
       .phone(user.getPhone())
       .createdAt(user.getCreatedAt().toString())
       .build();
   }
 
-  @Transactional
-  public User updateUser(Long userId, UserUpdateRequest request) {
-    User user = userRepository.findById(userId)
-      .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+  /**
+   * 사용자 상세 정보 조회
+   */
+  public UserDetailDto getUserDetail(Long userId) {
+    log.info("Getting user detail for user {}", userId);
 
-    if (request.getName() != null) user.setName(request.getName());
-    if (request.getPhone() != null) user.setPhone(request.getPhone());
-    return user;
+    // Mock: 사용자 상세 정보
+    return UserDetailDto.builder()
+      .name("이영은")
+      .role(Role.FREELANCER.name())
+      .phone("01023970938")
+      .birthDate(LocalDate.of(1998, 11, 23))
+      .gender(Gender.FEMALE.name())
+      .businessSector("디자인")
+      .businessSectorYears(8)
+      .businessRegistrationNumber("9325863715")
+      .build();
   }
 
+  /**
+   * 사용자 정보 수정
+   */
   @Transactional
-  public void updateUserStatus(Long userId, Status status) {
+  public void updateUser(Long userId, UserUpdateRequest request) {
+    log.info("Updating user {}", userId);
+
     User user = userRepository.findById(userId)
-      .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-    user.setStatus(status);
+      .orElseThrow(() -> new RuntimeException("User not found"));
+
+    // Mock: 사용자 정보 업데이트
+    // TODO: User 엔티티에 업데이트 메서드 추가하여 변경
+    log.info("User updated - businessRegistrationNumber: {}", request.getBusinessRegistrationNumber());
   }
 }
