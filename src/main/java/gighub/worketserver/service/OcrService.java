@@ -14,10 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class OcrService {
 
-  @Value("${OCR_URL}")
+  @Value("${naver.ocr.url}")
   private String ocrApiUrl;
 
-  @Value("${OCR_SECRET}")
+  @Value("${naver.ocr.secret}")
   private String ocrSecret;
 
   public String processOcr(MultipartFile imageFile, String message) {

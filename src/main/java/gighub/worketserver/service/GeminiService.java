@@ -27,11 +27,11 @@ public class GeminiService {
   private final RestTemplate restTemplate;
   private final ObjectMapper objectMapper;
 
-  @Value("${GEMINI_SECRET}")
+  @Value("${gemini.secret}")
   private String geminiApiKey;
-  @Value("${GEMINI_MODEL}")
+  @Value("${gemini.model}")
   private String modelName;
-  @Value("${GEMINI_URL}")
+  @Value("${gemini.url}")
   private String baseUrl;
 
 
