@@ -2,6 +2,7 @@ package gighub.worketserver.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import gighub.worketserver.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,7 +18,7 @@ public class ContractUploadService {
   private final GeminiService geminiService;
   private final ObjectMapper objectMapper;
 
-  public Map<String, Object> process(MultipartFile file, String message) {
+  public ApiResponse<?> process(MultipartFile file, String message) {
 
     try {
       // 1. OCR 실행
@@ -33,15 +34,11 @@ public class ContractUploadService {
         }
       );
 
-      return result;
+      return ApiResponse.ok(result);
 
     } catch (Exception e) {
       // 에러 응답
-      Map<String, Object> error = new HashMap<>();
-      error.put("status", "error");
-      error.put("message", "OCR 또는 Gemini 처리 중 오류");
-      error.put("detail", e.getMessage());
-      return error;
+      return ApiResponse.error("계약서 처리 중 오류: " + e.getMessage());
     }
   }
 }

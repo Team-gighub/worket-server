@@ -22,6 +22,6 @@ public class ContractController {
     @RequestPart("file") MultipartFile file,
     @RequestPart("message") String message
   ) {
-    return ApiResponse.ok(contractService.process(file, message));
+    return contractService.process(file, message);
   }
 }
