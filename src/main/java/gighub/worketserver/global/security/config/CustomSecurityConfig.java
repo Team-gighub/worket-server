@@ -1,7 +1,6 @@
 package gighub.worketserver.global.security.config;
 
 import gighub.worketserver.global.filter.PasscodeCheckFilter;
-import gighub.worketserver.global.filter.ProfileCheckFilter;
 import gighub.worketserver.global.filter.TokenAuthenticationFilter;
 import gighub.worketserver.global.security.converter.KakaoTokenResponseConverter;
 import gighub.worketserver.global.security.handler.CustomAccessDeniedHandler;
@@ -43,88 +42,82 @@ import java.util.List;
 @EnableMethodSecurity
 public class CustomSecurityConfig {
 
-  private final CustomOAuth2UserService customOAuth2UserService;
-  private final OAuth2SuccessHandler oAuth2SuccessHandler;
-  private final TokenAuthenticationFilter tokenAuthenticationFilter;
-  private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-  private final CustomAccessDeniedHandler customAccessDeniedHandler;
-  private final PasscodeCheckFilter passcodeCheckFilter;
-  private final ProfileCheckFilter profileCheckFilter;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final TokenAuthenticationFilter tokenAuthenticationFilter;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final PasscodeCheckFilter passcodeCheckFilter;
 
-  @Bean
-  public SecurityFilterChain filterChain(
-    HttpSecurity http,
-    CustomAuthorizationRequestResolver customAuthorizationRequestResolver,
-    CustomAuthorizationRequestRepository customAuthorizationRequestRepository
-  ) throws Exception {
+    @Bean
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            CustomAuthorizationRequestResolver customAuthorizationRequestResolver,
+            CustomAuthorizationRequestRepository customAuthorizationRequestRepository
+    ) throws Exception {
 
-    http
-      .cors(Customizer.withDefaults())
-      .csrf(csrf -> csrf.disable())
-      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-      .formLogin(form -> form.disable())
-      .httpBasic(basic -> basic.disable())
-      .logout(logout -> logout.disable())
+        http
+                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
 
-      .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/oauth2/**").permitAll()
-        .requestMatchers("/auth/token/**").permitAll()
-        .requestMatchers("/auth/logout").permitAll()
-        .requestMatchers("/api/auth/logout").permitAll()
-        .requestMatchers("/test").permitAll()
-        .anyRequest().authenticated()
-      )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/oauth2/**").permitAll()
+                        .requestMatchers("/auth/token/**").permitAll()
+                        .requestMatchers("/test").permitAll()
+                        .anyRequest().authenticated()
+                )
 
-      .oauth2Login(oauth -> oauth
-        .authorizationEndpoint(auth -> auth
-          .authorizationRequestResolver(customAuthorizationRequestResolver)
-          .authorizationRequestRepository(customAuthorizationRequestRepository)
-        )
-        .tokenEndpoint(token -> token.accessTokenResponseClient(kakaoTokenResponseClient()))
-        .userInfoEndpoint(user -> user.userService(customOAuth2UserService))
-        .successHandler(oAuth2SuccessHandler)
-      )
+                .oauth2Login(oauth -> oauth
+                        .authorizationEndpoint(auth -> auth
+                                .authorizationRequestResolver(customAuthorizationRequestResolver)
+                                .authorizationRequestRepository(customAuthorizationRequestRepository)
+                        )
+                        .tokenEndpoint(token -> token.accessTokenResponseClient(kakaoTokenResponseClient()))
+                        .userInfoEndpoint(user -> user.userService(customOAuth2UserService))
+                        .successHandler(oAuth2SuccessHandler)
+                )
 
-      .exceptionHandling(ex -> ex
-        .authenticationEntryPoint(customAuthenticationEntryPoint)
-        .accessDeniedHandler(customAccessDeniedHandler)
-      )
-      .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-      // Passcode 필터는 JWT 인증 후
-      .addFilterBefore(passcodeCheckFilter, AuthorizationFilter.class)
-      // 프로필 체크
-      .addFilterAfter(profileCheckFilter, PasscodeCheckFilter.class);
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                );
+//                .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        // Passcode 필터는 JWT 인증 후
+//                .addFilterBefore(passcodeCheckFilter, AuthorizationFilter.class);
 
-    return http.build();
-  }
+        return http.build();
+    }
 
-  @Bean
-  public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOriginPatterns(List.of("http://localhost:3000"));
-    config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
-    config.setAllowedHeaders(List.of("*"));
-    config.setAllowCredentials(true);
-    config.setExposedHeaders(List.of("Authorization"));
-    config.setMaxAge(3600L);
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("http://localhost:3000"));
+        config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setMaxAge(3600L);
 
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", config);
-    return source;
-  }
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 
-  private OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> kakaoTokenResponseClient() {
-    DefaultAuthorizationCodeTokenResponseClient client = new DefaultAuthorizationCodeTokenResponseClient();
+    private OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> kakaoTokenResponseClient() {
+        DefaultAuthorizationCodeTokenResponseClient client = new DefaultAuthorizationCodeTokenResponseClient();
 
-    OAuth2AccessTokenResponseHttpMessageConverter converter =
-      new OAuth2AccessTokenResponseHttpMessageConverter();
-    converter.setAccessTokenResponseConverter(new KakaoTokenResponseConverter());
+        OAuth2AccessTokenResponseHttpMessageConverter converter =
+                new OAuth2AccessTokenResponseHttpMessageConverter();
+        converter.setAccessTokenResponseConverter(new KakaoTokenResponseConverter());
 
-    RestTemplate restTemplate = new RestTemplate(Arrays.asList(
-      new FormHttpMessageConverter(), converter));
-    restTemplate.setErrorHandler(new OAuth2ErrorResponseErrorHandler());
+        RestTemplate restTemplate = new RestTemplate(Arrays.asList(
+                new FormHttpMessageConverter(), converter));
+        restTemplate.setErrorHandler(new OAuth2ErrorResponseErrorHandler());
 
-    client.setRestOperations(restTemplate);
-    return client;
-  }
+        client.setRestOperations(restTemplate);
+        return client;
+    }
 }
