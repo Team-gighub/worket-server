@@ -22,24 +22,31 @@ public class Transaction {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "contract_id")
+  @JoinColumn(name = "contract_id", nullable = false)
   private Contract contract;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "freelancer_id")
-  private User freelancer;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "client_id")
-  private User client;
-
   @Enumerated(EnumType.STRING)
-  @Column(name = "status", nullable = false, length = 20)
+  @Column(name = "status", nullable = false, length = 50)
   @Builder.Default
   private TransactionStatus status = TransactionStatus.CREATED;
 
-  @Column(name = "settled_amount", precision = 15, scale = 2)
-  private BigDecimal settledAmount;
+  @Column(name = "settlement_amount", precision = 15, scale = 2)
+  private BigDecimal settlementAmount;
+
+  @Column(name = "amount", nullable = false, precision = 15, scale = 2)
+  private BigDecimal amount;
+
+  @Column(name = "client_bank", length = 50)
+  private String clientBank;
+
+  @Column(name = "client_account", length = 100)
+  private String clientAccount;
+
+  @Column(name = "freelancer_bank", length = 50)
+  private String freelancerBank;
+
+  @Column(name = "freelancer_account", length = 100)
+  private String freelancerAccount;
 
   @Column(name = "signed_at")
   private LocalDateTime signedAt;
@@ -52,6 +59,9 @@ public class Transaction {
 
   @Column(name = "settled_at")
   private LocalDateTime settledAt;
+
+  @Column(name = "settlement_tx_id")
+  private Long settlementTxId;
 
   @Column(name = "created_at")
   @Builder.Default

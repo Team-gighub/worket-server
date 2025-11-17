@@ -44,6 +44,9 @@ public class User {
   @Column(length = 20)
   private String phone = generateRandomPhone();
 
+  @Column(name = "passcode", length = 255)
+  private String passcode;
+
   @Column(name = "created_at")
   private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -70,4 +73,3 @@ public class User {
     return String.format("010-%04d-%04d", mid, end);
   }
 }
-
