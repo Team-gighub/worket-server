@@ -9,7 +9,6 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -46,5 +45,15 @@ public class UserRefreshToken {
 
   public boolean isValid() {
     return !Boolean.TRUE.equals(isRevoked) && !isExpired();
+  }
+
+  public static UserRefreshToken create(Long userId, String refreshToken, LocalDateTime expiresAt) {
+    UserRefreshToken token = new UserRefreshToken();
+    token.userId = userId;
+    token.refreshToken = refreshToken;
+    token.issuedAt = LocalDateTime.now();
+    token.expiresAt = expiresAt;
+    token.isRevoked = false;
+    return token;
   }
 }

@@ -59,7 +59,9 @@ public class KakaoOauthService {
     }
   }
 
-  /** 카카오 연결 해제 */
+  /**
+   * 카카오 연결 해제
+   */
   public ApiResponse<String> unlink(HttpServletRequest request, HttpServletResponse response) {
     try {
       Long userId = extractUserIdFromJwt(request);
@@ -102,7 +104,9 @@ public class KakaoOauthService {
     }
   }
 
-  /** JWT 쿠키에서 사용자 ID 추출 */
+  /**
+   * JWT 쿠키에서 사용자 ID 추출
+   */
   private Long extractUserIdFromJwt(HttpServletRequest request) {
     String jwt = null;
     if (request.getCookies() != null) {
@@ -119,7 +123,9 @@ public class KakaoOauthService {
     return Long.parseLong(auth.getName());
   }
 
-  /** DB에서 Kakao Access Token 조회 */
+  /**
+   * DB에서 Kakao Access Token 조회
+   */
   private String getKakaoAccessToken(Long userId) {
     String token = oauthTokenService.findOauthAccessToken(userId, Provider.KAKAO);
     if (token == null)
@@ -127,7 +133,9 @@ public class KakaoOauthService {
     return token;
   }
 
-  /** 카카오 API 호출 공통 메서드 */
+  /**
+   * 카카오 API 호출 공통 메서드
+   */
   private void callKakaoApi(String url, String kakaoAccessToken) {
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + kakaoAccessToken);

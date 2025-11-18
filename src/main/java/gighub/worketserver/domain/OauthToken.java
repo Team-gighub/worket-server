@@ -12,7 +12,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -58,7 +57,18 @@ public class OauthToken {
     this.accessToken = accessToken;
   }
 
-  public void setRefreshTokenExpiresAt(LocalDateTime refreshExpiresAt) {
+  public void updateRefreshTokenExpiresAt(LocalDateTime refreshExpiresAt) {
     this.refreshExpiresAt = refreshExpiresAt;
+  }
+
+  public void updateRefreshToken(String refreshToken) {
+    this.refreshToken = refreshToken;
+  }
+
+  public static OauthToken create(Long userId, Provider provider) {
+    OauthToken token = new OauthToken();
+    token.userId = userId;
+    token.provider = provider;
+    return token;
   }
 }
