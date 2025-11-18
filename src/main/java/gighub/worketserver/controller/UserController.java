@@ -18,30 +18,19 @@ import java.util.List;
  */
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/users")
 public class UserController {
 
   private final UserService userService;
 
-  /**
-   * 전체 유저 조회 (관리자용)
-   * GET /users
-   */
-  @PreAuthorize("hasRole('ADMIN')")
-  @GetMapping("/users")
-  public ApiResponse<List<User>> findAll() {
-    return ApiResponse.ok(userService.findAllUsers());
-  }
-
-  /**
-   * 마이페이지 조회
-   * GET /mypage
-   */
-  @GetMapping("/mypage")
-  public ApiResponse<UserProfileDto> getMyPage(Authentication authentication) {
+  @GetMapping("/me")
+  public ApiResponse<UserProfileDto> getMyProfile(Authentication authentication) {
     try {
-      String userId = authentication.getName(); // JWT 토큰에서 sub(user_id) 끌어옴
-      UserProfileDto profile = userService.getUser(Long.parseLong(userId));
-      return ApiResponse.ok(profile);
+      Long userId = Long.parseLong(authentication.getName()); // sub 값 = user_id
+
+      UserProfileDto dto = userService.getUserProfile(userId);
+
+      return ApiResponse.ok(dto);
     } catch (Exception e) {
       return ApiResponse.error("마이페이지 조회 중 오류가 발생했습니다: " + e.getMessage());
     }

@@ -1,5 +1,6 @@
 package gighub.worketserver.service;
 
+import gighub.worketserver.domain.FreelancerProfile;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.Gender;
 import gighub.worketserver.domain.constants.Role;
@@ -8,6 +9,7 @@ import gighub.worketserver.dto.UserDetailDto;
 import gighub.worketserver.dto.UserProfileDto;
 import gighub.worketserver.dto.UserUpdateDto;
 import gighub.worketserver.dto.UserUpdateRequest;
+import gighub.worketserver.repository.FreelancerProfileRepository;
 import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,30 +28,13 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class UserService {
   private final UserRepository userRepository;
+  private final FreelancerProfileRepository freelancerProfileRepository;
 
   /**
    * 모든 사용자 조회 (관리자용)
    */
   public List<User> findAllUsers() {
     return userRepository.findAll();
-  }
-
-  /**
-   * 사용자 프로필 조회 (마이페이지)
-   */
-  public UserProfileDto getUser(Long userId) {
-    User user = userRepository.findById(userId)
-      .orElseThrow(() -> new RuntimeException("User not found"));
-
-    return UserProfileDto.builder()
-      .id(user.getId())  // userId -> id로 변경
-      .name(user.getName())
-      .provider(user.getProvider())
-      .role(user.getRole().name())
-      .status(user.getStatus().name())
-      .phone(user.getPhone())
-      .createdAt(user.getCreatedAt().toString())
-      .build();
   }
 
   /**
@@ -92,5 +77,16 @@ public class UserService {
       .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
     user.updateStatus(status);
+  }
+
+  public UserProfileDto getUserProfile(Long userId) {
+
+    User user = userRepository.findById(userId)
+      .orElseThrow(() -> new RuntimeException("User not found"));
+
+    FreelancerProfile profile = freelancerProfileRepository.findByUser(user)
+      .orElseThrow(() -> new RuntimeException("Freelancer profile not found"));
+
+    return UserProfileDto.from(user, profile); // DTO 조립
   }
 }

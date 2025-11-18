@@ -1,17 +1,36 @@
 package gighub.worketserver.dto;
 
-import gighub.worketserver.domain.constants.Provider;
+import gighub.worketserver.domain.FreelancerProfile;
+import gighub.worketserver.domain.User;
+import gighub.worketserver.domain.constants.Role;
+import gighub.worketserver.domain.constants.Gender;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.time.LocalDate;
 
 @Getter
 @Builder
 public class UserProfileDto {
-  private Long id;
   private String name;
-  private Provider provider;
-  private String role;
-  private String status;
+  private Role role;
   private String phone;
-  private String createdAt;
+  private LocalDate birthDate;
+  private Gender gender;
+  private String businessSector;
+  private Long businessSectorYears;
+  private String businessRegistrationNumber;
+
+  public static UserProfileDto from(User user, FreelancerProfile profile) {
+    return UserProfileDto.builder()
+      .name(user.getName())
+      .role(user.getRole())
+      .phone(user.getPhone())
+      .birthDate(profile.getBirthDate())
+      .gender(profile.getGender())
+      .businessSector(profile.getBusinessSector())
+      .businessSectorYears(profile.getBusinessSectorYears())
+      .businessRegistrationNumber(profile.getBusinessRegistrationNumber())
+      .build();
+  }
 }
