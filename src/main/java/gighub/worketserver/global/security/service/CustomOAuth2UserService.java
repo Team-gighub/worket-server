@@ -57,7 +57,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
       ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
 
     String state = customAuthorizationRequestRepository.getSavedState(request);
-    System.out.println("스테이트 왜 고장 " + state);
 
     String registrationId = userRequest.getClientRegistration().getRegistrationId();
     String userNameAttributeName = userRequest.getClientRegistration()
