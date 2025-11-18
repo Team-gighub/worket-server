@@ -1,15 +1,19 @@
 package gighub.worketserver.service;
 
+import gighub.worketserver.domain.Contract;
 import gighub.worketserver.domain.Transaction;
+import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
 import gighub.worketserver.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -45,7 +49,7 @@ public class TransactionService {
     contractList.add(TransactionSummaryDto.builder()
       .transactionId(1L)
       .title("웹 개발 프로젝트")
-      .status(TransactionStatus.SIGNED.name())
+      .status(TransactionStatus.CREATED.name())
       .amount(BigDecimal.valueOf(5000000))
       .startDate(LocalDate.of(year, month, 1).toString())
       .endDate(LocalDate.of(year, month, 15).toString())
@@ -78,15 +82,30 @@ public class TransactionService {
 
   /**
    * 거래 정보 미리보기
+   * 특정 거래 ID에 해당하는 미리보기 정보를 조회합니다.
+   * * @param transactionId 조회할 거래 ID
+   * @return 거래 미리보기 응답 객체
+   * @throws RuntimeException 해당 transactionId에 대한 정보가 없을 경우 (400 처리)
    */
+  @Transactional(readOnly = true)
   public TransactionPreviewResponse getTransactionPreview(Long transactionId) {
     log.info("Getting transaction preview for transaction {}", transactionId);
 
-    // Mock: 거래 미리보기
+    Transaction transaction = transactionRepository.findById(transactionId)
+      .orElseThrow(() -> {
+        log.warn("Transaction preview not found for ID: {}", transactionId);
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction not found");
+      });
+
+
+    Contract contract = transaction.getContract();
+    User freelancer = contract.getFreelancer();
+    User client = contract.getClient();
+
     return TransactionPreviewResponse.builder()
-      .freelancerName("이프리랜서")
-      .clientName("김의뢰인")
-      .title("웹 개발 프로젝트")
+      .title(contract.getTitle())
+      .freelancerName(freelancer.getName())
+      .clientName(client.getName())
       .build();
   }
 
@@ -117,7 +136,7 @@ public class TransactionService {
 
     // Mock: 거래 상세 정보
     return TransactionDetailResponse.builder()
-      .status(TransactionStatus.SIGNED.name())
+      .status(TransactionStatus.CREATED.name())
       .signedAt(LocalDateTime.now().minusDays(5).toString())
       .depositHoldAt(null)
       .paymentConfirmedAt(null)

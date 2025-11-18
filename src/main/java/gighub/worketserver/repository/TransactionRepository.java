@@ -2,12 +2,14 @@ package gighub.worketserver.repository;
 
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.constants.TransactionStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
@@ -27,4 +29,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 //    @Param("freelancerId") Long freelancerId,
 //    @Param("status") TransactionStatus status
 //  );
+
+  @EntityGraph(attributePaths = {
+    "contract", // 1단계: Transaction -> Contract 로딩
+    "contract.freelancer", // 2단계: Contract -> Freelancer(User) 로딩
+    "contract.client" // 2단계: Contract -> Client(User) 로딩
+  })
+    // 💡 JpaRepository의 기본 메서드를 오버라이드하여 EntityGraph를 적용합니다.
+  Optional<Transaction> findById(Long id);
 }
