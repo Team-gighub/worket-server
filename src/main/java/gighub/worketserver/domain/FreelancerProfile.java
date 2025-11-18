@@ -38,4 +38,28 @@ public class FreelancerProfile {
 
   @Column(name = "business_registration_number", length = 20)
   private String businessRegistrationNumber;
+
+  public void updateProfile(
+    LocalDate birthDate,
+    Gender gender,
+    String businessSector,
+    Long businessSectorYears,
+    String businessRegistrationNumber
+  ) {
+    if (birthDate != null) {
+      this.birthDate = birthDate;
+    }
+    if (gender != null) {
+      this.gender = gender;
+    }
+    if (businessSector != null) {
+      this.businessSector = businessSector;
+    }
+    if (businessSectorYears != null) {
+      this.businessSectorYears = businessSectorYears;
+    }
+    if (businessRegistrationNumber != null) {
+      this.businessRegistrationNumber = businessRegistrationNumber;
+    }
+  }
 }

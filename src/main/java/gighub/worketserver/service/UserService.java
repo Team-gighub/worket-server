@@ -5,10 +5,7 @@ import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.Gender;
 import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.domain.constants.Status;
-import gighub.worketserver.dto.UserDetailDto;
-import gighub.worketserver.dto.UserProfileDto;
-import gighub.worketserver.dto.UserUpdateDto;
-import gighub.worketserver.dto.UserUpdateRequest;
+import gighub.worketserver.dto.*;
 import gighub.worketserver.repository.FreelancerProfileRepository;
 import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 사용자(User) 관련 비즈니스 로직 Service
@@ -88,5 +86,43 @@ public class UserService {
       .orElseThrow(() -> new RuntimeException("Freelancer profile not found"));
 
     return UserProfileDto.from(user, profile); // DTO 조립
+  }
+
+  @Transactional
+  public UserProfileDto createOrUpdateProfile(Long userId, UserProfileRequest req) {
+
+    User user = userRepository.findById(userId)
+      .orElseThrow(() -> new RuntimeException("User not found"));
+
+    Optional<FreelancerProfile> optionalProfile =
+      freelancerProfileRepository.findByUser(user);
+
+    FreelancerProfile profile;
+
+    // 프로필이 없으면 생성
+    if (optionalProfile.isEmpty()) {
+      profile = FreelancerProfile.builder()
+        .user(user)
+        .businessSector(req.getBusinessSector())
+        .businessSectorYears(req.getBusinessSectorYears())
+        .build();
+
+      freelancerProfileRepository.save(profile);
+    }
+
+    // 프로필이 있으면 갱신
+    else {
+      profile = optionalProfile.get();
+
+      profile.updateProfile(
+        req.getBirthDate(),
+        req.getGender(),
+        req.getBusinessSector(),
+        req.getBusinessSectorYears(),
+        req.getBusinessRegistrationNumber()
+      );
+    }
+
+    return UserProfileDto.from(user, profile);
   }
 }

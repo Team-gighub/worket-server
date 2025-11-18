@@ -3,6 +3,7 @@ package gighub.worketserver.controller;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.dto.UserDetailDto;
 import gighub.worketserver.dto.UserProfileDto;
+import gighub.worketserver.dto.UserProfileRequest;
 import gighub.worketserver.dto.UserUpdateRequest;
 import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.service.UserService;
@@ -22,6 +23,20 @@ import java.util.List;
 public class UserController {
 
   private final UserService userService;
+
+  @PostMapping("/me")
+  public ApiResponse<UserProfileDto> createOrUpdateProfile(
+    @RequestBody UserProfileRequest request,
+    Authentication authentication) {
+    try {
+      Long userId = Long.parseLong(authentication.getName());
+      UserProfileDto dto = userService.createOrUpdateProfile(userId, request);
+      return ApiResponse.ok(dto);
+
+    } catch (Exception e) {
+      return ApiResponse.error("프로필 생성/갱신 중 오류가 발생했습니다: " + e.getMessage());
+    }
+  }
 
   @GetMapping("/me")
   public ApiResponse<UserProfileDto> getMyProfile(Authentication authentication) {
