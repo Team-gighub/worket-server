@@ -8,17 +8,18 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class ApiResponse<T> {
-  
+
   private static final String SUCCESS = "success";
   private static final String ERROR = "error";
 
   private String status;
   @JsonInclude(JsonInclude.Include.NON_NULL)
+  private String code;
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private T data;
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private String errorMessage;
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private String code;
+
 
   public static <T> ApiResponse<T> ok(T data) {
     return ApiResponse.<T>builder()
