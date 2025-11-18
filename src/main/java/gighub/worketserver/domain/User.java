@@ -52,10 +52,7 @@ public class User {
   @Column(name = "updated_at")
   @Builder.Default
   private LocalDateTime updatedAt = LocalDateTime.now();
-
-  @Column(name = "passcode")
-  private String passcode;
-
+  
   @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
   private FreelancerProfile freelancerProfile;
 
