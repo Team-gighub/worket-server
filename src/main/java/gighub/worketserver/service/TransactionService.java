@@ -49,7 +49,7 @@ public class TransactionService {
     contractList.add(TransactionSummaryDto.builder()
       .transactionId(1L)
       .title("웹 개발 프로젝트")
-      .status(TransactionStatus.CREATED.name())
+      .status(TransactionStatus.SIGNED.name())
       .amount(BigDecimal.valueOf(5000000))
       .startDate(LocalDate.of(year, month, 1).toString())
       .endDate(LocalDate.of(year, month, 15).toString())
@@ -111,18 +111,53 @@ public class TransactionService {
 
   /**
    * 거래 접근권한 판단
+   * * @param transactionId 조회할 거래 ID
    */
+  @Transactional(readOnly = true)
   public TransactionPermissionResponse checkPermission(Authentication authentication, Long transactionId) {
+    // 1. 토큰에서 사용자 ID 추출
     Long userId = Long.parseLong(authentication.getName());
     log.info("Checking permission for user {} on transaction {}", userId, transactionId);
 
-    // Mock: 권한 체크
-    // TODO: 실제 거래 의뢰인 매핑 상태 확인 및 권한 부여 로직
+    // 2. 거래 정보 및 관련 계약, 사용자 정보를 한 번에 조회
+    Transaction transaction = transactionRepository.findById(transactionId)
+      .orElseThrow(() -> {
+        log.warn("Permission check failed: Transaction {} not found.", transactionId);
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction with ID " + transactionId + " not found.");
+      });
 
-    return TransactionPermissionResponse.builder()
-      .userRole(Role.CLIENT.name())
-      .permission(true)
-      .build();
+    Contract contract = transaction.getContract();
+
+    // 3. 데이터 무결성 체크
+    if (contract == null || contract.getClient() == null || contract.getFreelancer() == null) {
+      log.error("Data integrity failure: Contract or User data is missing for transaction {}", transactionId);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Transaction data is incomplete (missing contract or user linkage).");
+    }
+
+    Long clientId = contract.getClient().getId();
+    Long freelancerId = contract.getFreelancer().getId();
+
+    // 4. 권한 및 역할 확인
+    if (userId.equals(clientId)) {
+      // 사용자가 클라이언트인 경우
+      return TransactionPermissionResponse.builder()
+        .userRole(Role.CLIENT.name())
+        .permission(true)
+        .build();
+    } else if (userId.equals(freelancerId)) {
+      // 사용자가 프리랜서인 경우
+      return TransactionPermissionResponse.builder()
+        .userRole(Role.FREELANCER.name())
+        .permission(true)
+        .build();
+    } else {
+      // 해당 거래와 관계가 없는 사용자 (권한 없음)
+      log.warn("Permission denied: User {} is not a participant in transaction {}", userId, transactionId);
+      return TransactionPermissionResponse.builder()
+        .userRole("GUEST") // GUEST 또는 NONE으로 역할 표시
+        .permission(false)
+        .build();
+    }
   }
 
   /**
@@ -136,7 +171,7 @@ public class TransactionService {
 
     // Mock: 거래 상세 정보
     return TransactionDetailResponse.builder()
-      .status(TransactionStatus.CREATED.name())
+      .status(TransactionStatus.SIGNED.name())
       .signedAt(LocalDateTime.now().minusDays(5).toString())
       .depositHoldAt(null)
       .paymentConfirmedAt(null)
