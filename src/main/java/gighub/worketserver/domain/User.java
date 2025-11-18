@@ -89,4 +89,8 @@ public class User {
     this.passcode = encodedPasscode;
     this.updatedAt = LocalDateTime.now();
   }
+
+  public void updateStatus(Status status) {
+    this.status = status;
+  }
 }

@@ -3,6 +3,7 @@ package gighub.worketserver.service;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.Gender;
 import gighub.worketserver.domain.constants.Role;
+import gighub.worketserver.domain.constants.Status;
 import gighub.worketserver.dto.UserDetailDto;
 import gighub.worketserver.dto.UserProfileDto;
 import gighub.worketserver.dto.UserUpdateDto;
@@ -83,5 +84,13 @@ public class UserService {
     // Mock: 사용자 정보 업데이트
     // TODO: User 엔티티에 업데이트 메서드 추가하여 변경
     log.info("User updated - businessRegistrationNumber: {}", request.getBusinessRegistrationNumber());
+  }
+
+  @Transactional
+  public void updateUserStatus(Long userId, Status status) {
+    User user = userRepository.findById(userId)
+      .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+    user.updateStatus(status);
   }
 }
