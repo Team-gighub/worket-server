@@ -11,20 +11,20 @@ import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-  List<Transaction> findByFreelancerId(Long freelancerId);
+//  List<Transaction> findByFreelancerId(Long freelancerId);
 
-  @Query("SELECT t FROM Transaction t WHERE t.freelancer.id = :freelancerId " +
-    "AND YEAR(t.createdAt) = :year AND MONTH(t.createdAt) = :month")
-  List<Transaction> findByFreelancerIdAndYearMonth(
-    @Param("freelancerId") Long freelancerId,
-    @Param("year") int year,
-    @Param("month") int month
-  );
-
-  @Query("SELECT COUNT(t) FROM Transaction t WHERE t.freelancer.id = :freelancerId " +
-    "AND t.status = :status")
-  Long countByFreelancerIdAndStatus(
-    @Param("freelancerId") Long freelancerId,
-    @Param("status") TransactionStatus status
-  );
+//  @Query("SELECT t FROM Transaction t WHERE t.freelancer.id = :freelancerId " +
+//    "AND YEAR(t.createdAt) = :year AND MONTH(t.createdAt) = :month")
+//  List<Transaction> findByFreelancerIdAndYearMonth(
+//    @Param("freelancerId") Long freelancerId,
+//    @Param("year") int year,
+//    @Param("month") int month
+//  );
+//
+//  @Query("SELECT COUNT(t) FROM Transaction t WHERE t.freelancer.id = :freelancerId " +
+//    "AND t.status = :status")
+//  Long countByFreelancerIdAndStatus(
+//    @Param("freelancerId") Long freelancerId,
+//    @Param("status") TransactionStatus status
+//  );
 }

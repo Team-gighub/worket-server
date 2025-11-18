@@ -23,9 +23,8 @@ public class OauthToken {
   @Column(name = "token_id")
   private Long tokenId;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
-  private User user;
+  @Column(name = "user_id", nullable = false)
+  private Long userId;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "provider", nullable = false)
@@ -58,7 +57,18 @@ public class OauthToken {
     this.accessToken = accessToken;
   }
 
-  public void setRefreshTokenExpiresAt(LocalDateTime refreshExpiresAt) {
+  public void updateRefreshTokenExpiresAt(LocalDateTime refreshExpiresAt) {
     this.refreshExpiresAt = refreshExpiresAt;
+  }
+
+  public void updateRefreshToken(String refreshToken) {
+    this.refreshToken = refreshToken;
+  }
+
+  public static OauthToken create(Long userId, Provider provider) {
+    OauthToken token = new OauthToken();
+    token.userId = userId;
+    token.provider = provider;
+    return token;
   }
 }

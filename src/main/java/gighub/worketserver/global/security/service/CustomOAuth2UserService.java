@@ -86,11 +86,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
           ? Role.CLIENT
           : Role.FREELANCER;
 
-        User newUser = oAuth2UserInfo.toEntity(role);
-        newUser.setRole(role);
-
         Provider provider = Provider.valueOf(registrationId.toUpperCase());
-        newUser.setProvider(provider);
+        User newUser = User.create(
+          provider,
+          oAuth2UserInfo.oauthId(),
+          oAuth2UserInfo.name(),
+          role
+        );
 
         return userRepository.save(newUser);
       });
@@ -107,12 +109,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
       : null;
 
     OauthToken oauthToken = oauthTokenRepository.findByUserIdAndProvider(userId, provider)
-      .orElseGet(() -> {
-        OauthToken newToken = new OauthToken();
-        newToken.setUserId(userId);
-        newToken.setProvider(provider);
-        return newToken;
-      });
+      .orElseGet(() -> OauthToken.create(userId, provider));
 
     oauthToken.updateTokens(accessToken, refreshToken, refreshExpires);
 
