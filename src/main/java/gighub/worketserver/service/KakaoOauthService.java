@@ -51,9 +51,13 @@ public class KakaoOauthService {
 
         callKakaoApi("https://kapi.kakao.com/v1/user/unlink", kakaoAccess);
 
-        oauthTokenService.deleteOauthAccessToken(userId, Provider.KAKAO);
-        refreshTokenService.revokeAllRefreshTokens(userId);
-        userService.updateUserStatus(userId, Status.DELETED);
+  /**
+   * 카카오 연결 해제
+   */
+  public ApiResponse<String> unlink(HttpServletRequest request, HttpServletResponse response) {
+    try {
+      Long userId = extractUserIdFromJwt(request);
+      String kakaoAccessToken = getKakaoAccessToken(userId);
 
         ResponseCookie clearAccess = cookieUtil.createTokenCookie("accessToken", "", 0);
         ResponseCookie clearRefresh = cookieUtil.createTokenCookie("refreshToken", "", 0);
@@ -64,7 +68,8 @@ public class KakaoOauthService {
 
     private Long extractUserId(HttpServletRequest request) {
 
-        String jwt = null;
+      // 4. 사용자 상태 변경
+      userService.updateUserStatus(userId, Status.DELETED);
 
         if (request.getCookies() != null) {
             for (Cookie c : request.getCookies()) {
@@ -102,6 +107,18 @@ public class KakaoOauthService {
             restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(null, headers), String.class);
         } catch (RestClientException e) {
             throw new TokenException(TokenErrorCode.INVALID_TOKEN);
+  }
+
+  /**
+   * JWT 쿠키에서 사용자 ID 추출
+   */
+  private Long extractUserIdFromJwt(HttpServletRequest request) {
+    String jwt = null;
+    if (request.getCookies() != null) {
+      for (Cookie cookie : request.getCookies()) {
+        if ("accessToken".equals(cookie.getName())) {
+          jwt = cookie.getValue();
+          break;
         }
     }
 }
