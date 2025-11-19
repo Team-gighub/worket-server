@@ -53,9 +53,6 @@ public class User {
   @Builder.Default
   private LocalDateTime updatedAt = LocalDateTime.now();
   
-  @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
-  private FreelancerProfile freelancerProfile;
-
   @PrePersist
   public void prePersist() {
     if (this.phone == null) {
