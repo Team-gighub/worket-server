@@ -18,7 +18,9 @@ public class RefreshTokenService {
 
   private final UserRefreshTokenRepository userRefreshTokenRepository;
 
-  /** JWT Refresh Token 저장 또는 갱신 */
+  /**
+   * JWT Refresh Token 저장 또는 갱신
+   */
   @Transactional
   public void saveRefreshToken(Long userId, String refreshToken, LocalDateTime expiresAt) {
     // 기존 유효한 토큰이 있으면 revoke 처리
@@ -29,17 +31,14 @@ public class RefreshTokenService {
       });
 
     // 새 리프레시 토큰 저장
-    UserRefreshToken newToken = new UserRefreshToken();
-    newToken.setUserId(userId);
-    newToken.setRefreshToken(refreshToken);
-    newToken.setIssuedAt(LocalDateTime.now());
-    newToken.setExpiresAt(expiresAt);
-    newToken.setIsRevoked(false);
+    UserRefreshToken newToken = UserRefreshToken.create(userId, refreshToken, expiresAt);
 
     userRefreshTokenRepository.save(newToken);
   }
 
-  /** JWT Refresh Token 조회 */
+  /**
+   * JWT Refresh Token 조회
+   */
   @Transactional(readOnly = true)
   public String findRefreshTokenOrThrow(Long userId) {
     return userRefreshTokenRepository.findByUserIdAndIsRevokedFalse(userId)
@@ -47,14 +46,18 @@ public class RefreshTokenService {
       .orElseThrow(() -> new TokenException(TokenErrorCode.EXPIRED_TOKEN));
   }
 
-  /** JWT Refresh Token 검증 */
+  /**
+   * JWT Refresh Token 검증
+   */
   public boolean isValidRefreshToken(String refreshToken) {
     return userRefreshTokenRepository.findByRefreshTokenAndIsRevokedFalse(refreshToken)
       .map(UserRefreshToken::isValid)
       .orElse(false);
   }
 
-  /** 사용자의 모든 Refresh Token revoke (로그아웃 시) */
+  /**
+   * 사용자의 모든 Refresh Token revoke (로그아웃 시)
+   */
   @Transactional
   public void revokeAllRefreshTokens(Long userId) {
     userRefreshTokenRepository.findByUserIdAndIsRevokedFalse(userId)
@@ -82,12 +85,10 @@ public class RefreshTokenService {
     userRefreshTokenRepository.save(existing);
 
     // 3. 새 토큰 엔티티 생성 및 저장
-    UserRefreshToken newToken = new UserRefreshToken();
-    newToken.setUserId(existing.getUserId());
-    newToken.setRefreshToken(newRefreshToken);
-    newToken.setIssuedAt(LocalDateTime.now());
-    newToken.setExpiresAt(LocalDateTime.now().plusDays(7)); // 새 만료일
-    newToken.setIsRevoked(false);
+    Long userId = existing.getUserId();
+    LocalDateTime newExpiresAt = LocalDateTime.now().plusDays(7);
+
+    UserRefreshToken newToken = UserRefreshToken.create(userId, newRefreshToken, newExpiresAt);
 
     userRefreshTokenRepository.save(newToken);
   }
