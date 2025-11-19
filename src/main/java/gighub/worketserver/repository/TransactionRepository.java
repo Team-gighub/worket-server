@@ -37,4 +37,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
   })
     // 💡 JpaRepository의 기본 메서드를 오버라이드하여 EntityGraph를 적용합니다.
   Optional<Transaction> findById(Long id);
+
+  @Query("""
+    SELECT t FROM Transaction t
+    JOIN FETCH t.contract c
+    JOIN FETCH c.client cl
+    JOIN FETCH c.freelancer fr
+    WHERE t.id = :transactionId
+      AND (cl.id = :userId OR fr.id = :userId)
+  """)
+  Optional<Transaction> findByIdAndUserId(Long transactionId, Long userId);
+
 }

@@ -120,47 +120,23 @@ public class TransactionService {
     Long userId = Long.parseLong(authentication.getName());
     log.info("Checking permission for user {} on transaction {}", userId, transactionId);
 
-    // 2. 거래 정보 및 관련 계약, 사용자 정보를 한 번에 조회
-    Transaction transaction = transactionRepository.findById(transactionId)
+    // 내 거래일 때만 조회됨
+    Transaction transaction = transactionRepository.findByIdAndUserId(transactionId, userId)
       .orElseThrow(() -> {
-        log.warn("Permission check failed: Transaction {} not found.", transactionId);
+        log.warn("Permission denied or transaction not found. userId={}, transactionId={}",
+          userId, transactionId);
+
         //TODO: 전역 에러 핸들러로 수정 필요
-        return new ResponseStatusException(HttpStatus.BAD_REQUEST, transactionId + "를 찾을 수 없습니다.");
+        return new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 거래에 접근할 수 없습니다.");
       });
 
     Contract contract = transaction.getContract();
-
-    // 3. 데이터 무결성 체크
-    if (contract == null || contract.getClient() == null || contract.getFreelancer() == null) {
-      log.error("Data integrity failure: Contract or User data is missing for transaction {}", transactionId);
-      //TODO: 전역 에러 핸들러로 수정 필요
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "거래 데이터가 불완전합니다 (계약 정보 또는 사용자 연결 누락).");
-    }
-
     Long clientId = contract.getClient().getId();
-    Long freelancerId = contract.getFreelancer().getId();
 
-    // 4. 권한 및 역할 확인
-    if (userId.equals(clientId)) {
-      // 사용자가 클라이언트인 경우
-      return TransactionPermissionResponse.builder()
-        .userRole(Role.CLIENT.name())
-        .permission(true)
-        .build();
-    } else if (userId.equals(freelancerId)) {
-      // 사용자가 프리랜서인 경우
-      return TransactionPermissionResponse.builder()
-        .userRole(Role.FREELANCER.name())
-        .permission(true)
-        .build();
-    } else {
-      // 해당 거래와 관계가 없는 사용자 (권한 없음)
-      log.warn("Permission denied: User {} is not a participant in transaction {}", userId, transactionId);
-      return TransactionPermissionResponse.builder()
-        .userRole("GUEST") // GUEST 또는 NONE으로 역할 표시
-        .permission(false)
-        .build();
-    }
+    return TransactionPermissionResponse.builder()
+      .userRole(userId.equals(clientId) ? Role.CLIENT.name() : Role.FREELANCER.name())
+      .permission(true)
+      .build();
   }
 
   /**
