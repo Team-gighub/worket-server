@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
 
-// Spring Boot DTO (예시)
+// Gemini API 요청 DTO
 public record GeminiRequestDto(List<Content> contents, @JsonProperty("generationConfig")
 Map<String, Object> generationConfig) {
   public record Content(String role, List<Part> parts) {

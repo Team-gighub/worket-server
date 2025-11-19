@@ -79,10 +79,10 @@ public class GeminiService {
       String pureJsonString = cleanGeminiJsonOutput(rawJsonStringWithMarkdown);
       return pureJsonString; // ⭐️ 최종적으로 추출된 텍스트(JSON 문자열)만 반환
     } else {
+      //TODO : custom error 도입 예정
       throw new RuntimeException("Gemini 응답에서 'text' 필드를 찾을 수 없거나 형식이 잘못되었습니다.");
     }
 
-    //
   }
 
   private String cleanGeminiJsonOutput(String codeBlockText) {

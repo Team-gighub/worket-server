@@ -7,8 +7,6 @@ import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
-import gighub.worketserver.global.exception.ErrorCode;
-import gighub.worketserver.global.exception.RestApiException;
 import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.repository.ContractRepository;
 import gighub.worketserver.repository.TransactionRepository;
@@ -44,7 +42,7 @@ public class ContractService {
   /**
    * 계약서 추출 (OCR + LLM)
    */
-  public ApiResponse<?> extractContract(Authentication authentication, MultipartFile file, String message) {
+  public ApiResponse<?> extractContract(MultipartFile file, String message) {
     try {
       // 1. OCR 실행
       String ocrJson = ocrService.processOcr(file, message);
@@ -62,8 +60,8 @@ public class ContractService {
       return ApiResponse.ok(result);
 
     } catch (Exception e) {
-      // 에러 응답
-      throw new RestApiException(ErrorCode.BAD_REQUEST);
+      // TODO : custom error 도입
+      throw new RuntimeException(e);
     }
   }
 

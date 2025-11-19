@@ -29,11 +29,11 @@ public class ContractController {
    */
   @PostMapping("/extract")
   public ApiResponse<?> extractContract(
-    Authentication authentication,
     @RequestPart("file") MultipartFile file,
     @RequestPart("message") String message
   ) {
-    return contractService.extractContract(authentication, file, message);
+    //TODO : 에러 처리 리팩토링 예정
+    return contractService.extractContract(file, message);
   }
 
   /**

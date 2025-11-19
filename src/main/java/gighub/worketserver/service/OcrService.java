@@ -1,5 +1,6 @@
 package gighub.worketserver.service;
 
+import gighub.worketserver.global.config.RestTemplateConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -7,7 +8,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -21,6 +21,7 @@ public class OcrService {
   private String ocrSecret;
 
   public String processOcr(MultipartFile imageFile, String message) {
+    RestTemplateConfig restTemplate = new RestTemplateConfig();
 
     try {
       HttpHeaders headers = new HttpHeaders();
@@ -42,9 +43,8 @@ public class OcrService {
       HttpEntity<MultiValueMap<String, Object>> requestEntity =
         new HttpEntity<>(body, headers);
 
-      RestTemplate restTemplate = new RestTemplate();
 
-      ResponseEntity<String> response = restTemplate.exchange(
+      ResponseEntity<String> response = restTemplate.restTemplate().exchange(
         ocrApiUrl,
         HttpMethod.POST,
         requestEntity,
