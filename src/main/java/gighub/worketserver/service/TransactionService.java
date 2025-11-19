@@ -1,9 +1,12 @@
 package gighub.worketserver.service;
 
+import gighub.worketserver.domain.Contract;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
+import gighub.worketserver.global.exception.ErrorCode;
+import gighub.worketserver.global.exception.RestApiException;
 import gighub.worketserver.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +31,9 @@ import java.util.List;
 public class TransactionService {
 
   private final TransactionRepository transactionRepository;
+
+  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+  private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
   /**
    * 거래 전체 조회 (월별)
@@ -115,32 +122,62 @@ public class TransactionService {
     Long userId = Long.parseLong(authentication.getName());
     log.info("Getting transaction detail for transaction {} by user {}", transactionId, userId);
 
-    // Mock: 거래 상세 정보
+    // 1단계: Transaction 존재 여부 확인
+    if (!transactionRepository.existsByTransactionId(transactionId)) {
+      log.warn("Transaction not found: {}", transactionId);
+      throw new RestApiException(ErrorCode.NOT_FOUND);
+    }
+
+    // 2단계: 권한 확인 (로그인한 프리랜서의 거래인지)
+    if (!transactionRepository.hasPermission(transactionId, userId)) {
+      log.warn("User {} has no permission for transaction {}", userId, transactionId);
+      throw new RestApiException(ErrorCode.FORBIDDEN_ACCESS);
+    }
+
+    // 3단계: 실제 데이터 조회 (JOIN FETCH)
+    Transaction transaction = transactionRepository.findByIdWithDetails(transactionId)
+      .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND)); // 이론상 발생 안 함
+
+    Contract contract = transaction.getContract();
+
+    // 4단계: DTO 변환 및 반환
     return TransactionDetailResponse.builder()
-      .status(TransactionStatus.SIGNED.name())
-      .signedAt(LocalDateTime.now().minusDays(5).toString())
-      .depositHoldAt(null)
-      .paymentConfirmedAt(null)
-      .settledAt(null)
-      .createdAt(LocalDateTime.now().minusDays(10).toString())
-      .contractId(1L)
-      .settledAmount(BigDecimal.valueOf(5000000))
-      .contractFileUrl("https://s3.amazonaws.com/bucket/contract-1.pdf")
+      .status(transaction.getStatus().name())
+      .signedAt(transaction.getSignedAt() != null
+        ? transaction.getSignedAt().format(DATETIME_FORMATTER)
+        : null)
+      .depositHoldAt(transaction.getDepositHoldAt() != null
+        ? transaction.getDepositHoldAt().format(DATETIME_FORMATTER)
+        : null)
+      .paymentConfirmedAt(transaction.getPaymentConfirmedAt() != null
+        ? transaction.getPaymentConfirmedAt().format(DATETIME_FORMATTER)
+        : null)
+      .settledAt(transaction.getSettledAt() != null
+        ? transaction.getSettledAt().format(DATETIME_FORMATTER)
+        : null)
+      .createdAt(transaction.getCreatedAt().format(DATETIME_FORMATTER))
+      .contractId(contract.getId())
+      .settledAmount(transaction.getSettlementAmount())
+      .contractFileUrl("https://s3.amazonaws.com/bucket/contract-" + contract.getId() + ".pdf") // TODO: 실제 S3 URL
       .contractInfo(ContractInfoDto.builder()
-        .title("웹 개발 프로젝트")
-        .amount(BigDecimal.valueOf(5000000))
-        .startDate(LocalDate.now().minusDays(5).toString())
-        .endDate(LocalDate.now().plusDays(85).toString())
+        .title(contract.getTitle())
+        .amount(contract.getAmount())
+        .startDate(contract.getStartDate() != null
+          ? contract.getStartDate().format(DATE_FORMATTER)
+          : null)
+        .endDate(contract.getEndDate() != null
+          ? contract.getEndDate().format(DATE_FORMATTER)
+          : null)
         .build())
       .clientInfo(ClientInfoDto.builder()
-        .name("김의뢰인")
-        .phone("010-1234-5678")
+        .name(contract.getClient().getName())
+        .phone(contract.getClient().getPhone())
         .build())
       .freelancerInfo(FreelancerInfoDto.builder()
-        .name("이프리랜서")
-        .phone("010-9876-5432")
-        .account("110-123-456789")
-        .bank("신한은행")
+        .name(contract.getFreelancer().getName())
+        .phone(contract.getFreelancer().getPhone())
+        .account(transaction.getFreelancerAccount())
+        .bank(transaction.getFreelancerBank())
         .build())
       .build();
   }
