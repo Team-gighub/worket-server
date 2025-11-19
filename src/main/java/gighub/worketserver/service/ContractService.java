@@ -7,6 +7,8 @@ import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
+import gighub.worketserver.global.exception.ErrorCode;
+import gighub.worketserver.global.exception.RestApiException;
 import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.repository.ContractRepository;
 import gighub.worketserver.repository.TransactionRepository;
@@ -61,7 +63,7 @@ public class ContractService {
 
     } catch (Exception e) {
       // 에러 응답
-      return ApiResponse.error("계약서 처리 중 오류: " + e.getMessage());
+      throw new RestApiException(ErrorCode.BAD_REQUEST);
     }
   }
 
