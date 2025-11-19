@@ -1,7 +1,7 @@
 package gighub.worketserver.global.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import gighub.worketserver.global.exception.TokenErrorCode;
+import gighub.worketserver.global.exception.*;
 import gighub.worketserver.global.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,22 +23,41 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
   public void commence(HttpServletRequest request, HttpServletResponse response,
                        AuthenticationException authException) throws IOException {
 
-    // Filter에서 저장한 예외 정보 가져오기
-    TokenErrorCode errorCode = (TokenErrorCode) request.getAttribute("exception");
+    Object ex = request.getAttribute("exception");
 
-    // 예외 정보가 없으면 기본값
-    if (errorCode == null) {
-      errorCode = TokenErrorCode.INVALID_TOKEN;
+    int status;
+    String message;
+    String code;
+
+    if (ex instanceof TokenErrorCode token) {
+      status = token.getHttpStatus().value();
+      message = token.getMessage();
+      code = token.getCode();
+    } else if (ex instanceof PasscodeErrorCode pass) {
+      status = pass.getHttpStatus().value();
+      message = pass.getMessage();
+      code = pass.getCode();
+
+    } else if (ex instanceof ProfileErrorCode profile) {
+      status = profile.getHttpStatus().value();
+      message = profile.getMessage();
+      code = profile.getCode();
+
+    } else {
+      // 둘 다 아니면 기본값
+      status = 401;
+      message = authException.getMessage() != null
+        ? authException.getMessage()
+        : "인증이 필요합니다.";
+      code = "UNAUTHORIZED";
     }
 
-    // 응답 설정
+    response.setStatus(status);
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response.setCharacterEncoding("UTF-8");
-    response.setStatus(errorCode.getHttpStatus().value());
 
-    ApiResponse<Void> errorResponse = ApiResponse.error(errorCode.getMessage());
+    ApiResponse<Void> body = ApiResponse.error(message, code);
 
-    // JSON으로 변환해서 응답
-    response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
+    response.getWriter().write(objectMapper.writeValueAsString(body));
   }
 }

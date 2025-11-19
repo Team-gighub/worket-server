@@ -32,45 +32,22 @@ public class UserController {
     return ApiResponse.ok(userService.findAllUsers());
   }
 
-  /**
-   * 마이페이지 조회
-   * GET /mypage
-   */
-  @GetMapping("/mypage")
-  public ApiResponse<UserProfileDto> getMyPage(Authentication authentication) {
-    try {
-      String userId = authentication.getName(); // JWT 토큰에서 sub(user_id) 끌어옴
-      UserProfileDto profile = userService.getUser(Long.parseLong(userId));
-      return ApiResponse.ok(profile);
-    } catch (Exception e) {
-      return ApiResponse.error("마이페이지 조회 중 오류가 발생했습니다: " + e.getMessage());
+    @GetMapping("/mypage")
+    public ApiResponse<UserProfileDto> getMyPage(Authentication authentication) {
+        try {
+            String userId = authentication.getName(); // JWT 토큰에서 sub(user_id) 끌어옴
+            UserProfileDto profile = userService.getUser(Long.parseLong(userId));
+            return ApiResponse.ok(profile);
+        } catch (Exception e) {
+            return ApiResponse.error(
+                    "마이페이지 조회 중 오류가 발생했습니다: " + e.getMessage(),
+                    "SERVER_5000"
+            );
+        }
     }
-  }
 
-  /**
-   * 유저 정보 조회
-   * GET /users/{userId}
-   */
-  @GetMapping("/users/{userId}")
-  public ApiResponse<UserDetailDto> getUserDetail(
-    Authentication authentication,
-    @PathVariable Long userId
-  ) {
-    UserDetailDto userDetail = userService.getUserDetail(userId);
-    return ApiResponse.ok(userDetail);
-  }
-
-  /**
-   * 유저 정보 수정
-   * POST /users/{userId}
-   */
-  @PostMapping("/users/{userId}")
-  public ApiResponse<Void> updateUser(
-    Authentication authentication,
-    @PathVariable Long userId,
-    @RequestBody UserUpdateRequest request
-  ) {
-    userService.updateUser(userId, request);
-    return ApiResponse.ok(null);
-  }
+    @GetMapping("/test")
+    public ApiResponse<String> test(Authentication authentication) {
+        return ApiResponse.ok("hi");
+    }
 }
