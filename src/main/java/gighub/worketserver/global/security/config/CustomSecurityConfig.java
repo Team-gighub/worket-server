@@ -1,5 +1,7 @@
 package gighub.worketserver.global.security.config;
 
+import gighub.worketserver.global.filter.PasscodeCheckFilter;
+import gighub.worketserver.global.filter.ProfileCheckFilter;
 import gighub.worketserver.global.filter.TokenAuthenticationFilter;
 import gighub.worketserver.global.security.converter.KakaoTokenResponseConverter;
 import gighub.worketserver.global.security.handler.CustomAccessDeniedHandler;
@@ -23,6 +25,9 @@ import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCo
 import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
@@ -43,6 +48,8 @@ public class CustomSecurityConfig {
   private final TokenAuthenticationFilter tokenAuthenticationFilter;
   private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
   private final CustomAccessDeniedHandler customAccessDeniedHandler;
+  private final PasscodeCheckFilter passcodeCheckFilter;
+  private final ProfileCheckFilter profileCheckFilter;
 
   @Bean
   public SecurityFilterChain filterChain(
@@ -61,6 +68,7 @@ public class CustomSecurityConfig {
       .authorizeHttpRequests(auth -> auth
         .requestMatchers("/oauth2/**").permitAll()
         .requestMatchers("/auth/token/**").permitAll()
+        .requestMatchers("/test").permitAll()
         .requestMatchers("/transactions/*/preview").permitAll()
         .anyRequest().authenticated()
       )
@@ -79,7 +87,10 @@ public class CustomSecurityConfig {
         .authenticationEntryPoint(customAuthenticationEntryPoint)
         .accessDeniedHandler(customAccessDeniedHandler)
       )
-      .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+      .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+      .addFilterBefore(passcodeCheckFilter, AuthorizationFilter.class)
+      .addFilterBefore(profileCheckFilter, AuthorizationFilter.class);
 
     return http.build();
   }
