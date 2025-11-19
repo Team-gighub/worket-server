@@ -76,10 +76,13 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     } catch (TokenException e) {
       clearCookies(response);
       request.setAttribute("exception", e.getErrorCode());
+      throw new TokenException(e.getErrorCode());
 
     } catch (Exception e) {
       clearCookies(response);
       request.setAttribute("exception", TokenErrorCode.INVALID_TOKEN);
+
+      throw new TokenException(TokenErrorCode.INVALID_TOKEN);
     }
 
     filterChain.doFilter(request, response);
