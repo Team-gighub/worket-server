@@ -13,8 +13,8 @@ public class ApiResponse<T> {
   private static final String ERROR = "error";
 
   private String status;
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private String code;
+  @JsonInclude(JsonInclude.Include.NON_EMPTY)
+  private String customCode;
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private T data;
   @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -36,10 +36,10 @@ public class ApiResponse<T> {
   }
 
   // 특정 code를 반환해주고 싶다면
-  public static <T> ApiResponse<T> error(String errorMessage, String code) {
+  public static <T> ApiResponse<T> error(String errorMessage, String customCode) {
     return ApiResponse.<T>builder()
       .status(ERROR)
-      .code(code)
+      .customCode(customCode)
       .errorMessage(errorMessage)
       .build();
   }
