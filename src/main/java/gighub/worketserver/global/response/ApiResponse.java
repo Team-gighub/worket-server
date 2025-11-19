@@ -28,6 +28,14 @@ public class ApiResponse<T> {
       .build();
   }
 
+  public static <T> ApiResponse<T> error(String errorMessage) {
+    return ApiResponse.<T>builder()
+      .status(ERROR)
+      .errorMessage(errorMessage)
+      .build();
+  }
+
+  // 특정 code를 반환해주고 싶다면
   public static <T> ApiResponse<T> error(String errorMessage, String code) {
     return ApiResponse.<T>builder()
       .status(ERROR)
