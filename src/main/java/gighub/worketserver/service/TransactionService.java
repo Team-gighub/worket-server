@@ -94,7 +94,8 @@ public class TransactionService {
     Transaction transaction = transactionRepository.findById(transactionId)
       .orElseThrow(() -> {
         log.warn("Transaction preview not found for ID: {}", transactionId);
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction not found");
+        //TODO: 전역 에러 핸들러로 수정 필요
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "transactionId를 찾을 수 없습니다.");
       });
 
 
@@ -123,7 +124,8 @@ public class TransactionService {
     Transaction transaction = transactionRepository.findById(transactionId)
       .orElseThrow(() -> {
         log.warn("Permission check failed: Transaction {} not found.", transactionId);
-        return new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction with ID " + transactionId + " not found.");
+        //TODO: 전역 에러 핸들러로 수정 필요
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, transactionId + "를 찾을 수 없습니다.");
       });
 
     Contract contract = transaction.getContract();
@@ -131,7 +133,8 @@ public class TransactionService {
     // 3. 데이터 무결성 체크
     if (contract == null || contract.getClient() == null || contract.getFreelancer() == null) {
       log.error("Data integrity failure: Contract or User data is missing for transaction {}", transactionId);
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Transaction data is incomplete (missing contract or user linkage).");
+      //TODO: 전역 에러 핸들러로 수정 필요
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "거래 데이터가 불완전합니다 (계약 정보 또는 사용자 연결 누락).");
     }
 
     Long clientId = contract.getClient().getId();
