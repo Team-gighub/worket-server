@@ -33,14 +33,13 @@ public class PasscodeService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "유저를 찾을 수 없습니다."));
 
+
         if (user.getPasscode() == null) {
             throw new PasscodeException(PasscodeErrorCode.PASSCODE_EMPTY);
         }
 
         if (!passwordEncoder.matches(rawPasscode, user.getPasscode())) {
-            // 왜 500으로 빠지는지 모르겠음
-//            throw new PasscodeException(PasscodeErrorCode.INVALID_PASSCODE);
-            throw new RestApiException(CommonErrorCode.UNAUTHORIZED_REQUEST, "패스코드가 틀렸습니다.");
+            throw new PasscodeException(PasscodeErrorCode.INVALID_PASSCODE);
         }
     }
 }

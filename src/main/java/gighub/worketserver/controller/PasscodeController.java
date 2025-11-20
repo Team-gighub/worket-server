@@ -16,32 +16,32 @@ import java.util.Map;
 @RequestMapping("/auth/passcode")
 public class PasscodeController {
 
-  private final PasscodeService passcodeService;
+    private final PasscodeService passcodeService;
 
-  @PostMapping("/register")
-  public ApiResponse<?> register(
-    @RequestBody Map<String, String> body,
-    Authentication authentication
-  ) {
-    Long userId = Long.parseLong(authentication.getName());
-    String passcode = body.get("passcode");
-    System.out.println("패스코드 왓어용" + passcode);
+    @PostMapping("/register")
+    public ApiResponse<?> register(
+            @RequestBody Map<String, String> body,
+            Authentication authentication
+    ) {
+        Long userId = Long.parseLong(authentication.getName());
+        String passcode = body.get("passcode");
+        System.out.println("패스코드 왓어용" + passcode);
 
-    passcodeService.registerPasscode(userId, passcode);
+        passcodeService.registerPasscode(userId, passcode);
 
-    return ApiResponse.ok("패스코드 등록 완료");
-  }
+        return ApiResponse.ok("패스코드 등록 완료");
+    }
 
-  @PostMapping("/verify")
-  public ApiResponse<?> verify(
-    @RequestBody Map<String, String> body,
-    Authentication authentication
-  ) {
-    Long userId = Long.parseLong(authentication.getName());
-    String passcode = body.get("passcode");
+    @PostMapping("/verify")
+    public ApiResponse<?> verify(
+            @RequestBody Map<String, String> body,
+            Authentication authentication
+    ) {
+        Long userId = Long.parseLong(authentication.getName());
+        String passcode = body.get("passcode");
 
-    passcodeService.verifyPasscode(userId, passcode);
+        passcodeService.verifyPasscode(userId, passcode);
 
-    return ApiResponse.ok("패스코드 인증 성공");
-  }
+        return ApiResponse.ok("패스코드 인증 성공");
+    }
 }
