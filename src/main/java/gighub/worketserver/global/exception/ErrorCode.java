@@ -7,5 +7,5 @@ public interface ErrorCode {
 
   String getCustomCode();
 
-  String getMessage();   // CustomException이 기본 메시지를 쓰기 위해 필요
+  String getMessage();
 }
