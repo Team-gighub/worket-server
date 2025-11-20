@@ -27,28 +27,18 @@ public class UserController {
   @PostMapping("/me")
   public ApiResponse<UserProfileDto> createOrUpdateProfile(
     @RequestBody UserProfileRequest request,
-    Authentication authentication) {
-    try {
-      Long userId = Long.parseLong(authentication.getName());
-      UserProfileDto dto = userService.createOrUpdateProfile(userId, request);
-      return ApiResponse.ok(dto);
-
-    } catch (Exception e) {
-      return ApiResponse.error("프로필 생성/갱신 중 오류가 발생했습니다: " + e.getMessage());
-    }
+    Authentication authentication
+  ) {
+    Long userId = Long.parseLong(authentication.getName());
+    UserProfileDto dto = userService.createOrUpdateProfile(userId, request);
+    return ApiResponse.ok(dto);
   }
 
   @GetMapping("/me")
   public ApiResponse<UserProfileDto> getMyProfile(Authentication authentication) {
-    try {
-      Long userId = Long.parseLong(authentication.getName()); // sub 값 = user_id
-
-      UserProfileDto dto = userService.getUserProfile(userId);
-
-      return ApiResponse.ok(dto);
-    } catch (Exception e) {
-      return ApiResponse.error("마이페이지 조회 중 오류가 발생했습니다: " + e.getMessage());
-    }
+    Long userId = Long.parseLong(authentication.getName());
+    UserProfileDto dto = userService.getUserProfile(userId);
+    return ApiResponse.ok(dto);
   }
 
   /**

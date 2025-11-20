@@ -80,38 +80,45 @@ public class UserService {
   public UserProfileDto getUserProfile(Long userId) {
 
     User user = userRepository.findById(userId)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+      .orElseThrow(() ->
+        new RestApiException(CommonErrorCode.NOT_FOUND, "유저를 찾을 수 없습니다.")
+      );
 
     FreelancerProfile profile = freelancerProfileRepository.findByUser(user)
-      .orElseThrow(() -> new RuntimeException("Freelancer profile not found"));
+      .orElseThrow(() ->
+        new RestApiException(CommonErrorCode.NOT_FOUND, "프로필을 찾을 수 없습니다.")
+      );
 
-    return UserProfileDto.from(user, profile); // DTO 조립
+    return UserProfileDto.from(user, profile);
   }
 
   @Transactional
   public UserProfileDto createOrUpdateProfile(Long userId, UserProfileRequest req) {
 
     User user = userRepository.findById(userId)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+      .orElseThrow(() ->
+        new RestApiException(CommonErrorCode.NOT_FOUND, "유저를 찾을 수 없습니다.")
+      );
 
     Optional<FreelancerProfile> optionalProfile =
       freelancerProfileRepository.findByUser(user);
 
     FreelancerProfile profile;
 
-    // 프로필이 없으면 생성
     if (optionalProfile.isEmpty()) {
+      // 생성
       profile = FreelancerProfile.builder()
         .user(user)
+        .birthDate(req.getBirthDate())
+        .gender(req.getGender())
         .businessSector(req.getBusinessSector())
         .businessSectorYears(req.getBusinessSectorYears())
+        .businessRegistrationNumber(req.getBusinessRegistrationNumber())
         .build();
 
       freelancerProfileRepository.save(profile);
-    }
-
-    // 프로필이 있으면 갱신
-    else {
+    } else {
+      // 수정
       profile = optionalProfile.get();
 
       profile.updateProfile(
