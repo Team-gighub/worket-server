@@ -1,10 +1,13 @@
 package gighub.worketserver.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gighub.worketserver.domain.Contract;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
+import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.repository.ContractRepository;
 import gighub.worketserver.repository.TransactionRepository;
 import gighub.worketserver.repository.UserRepository;
@@ -18,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * 계약서 관련 비즈니스 로직 Service
@@ -31,32 +35,34 @@ public class ContractService {
   private final ContractRepository contractRepository;
   private final TransactionRepository transactionRepository;
   private final UserRepository userRepository;
+  private final OcrService ocrService;
+  private final GeminiService geminiService;
+  private final ObjectMapper objectMapper;
 
   /**
    * 계약서 추출 (OCR + LLM)
    */
-  public ContractExtractResponse extractContract(Authentication authentication, MultipartFile file) {
-    log.info("Extracting contract from file: {}", file.getOriginalFilename());
+  public ApiResponse<?> extractContract(MultipartFile file, String message) {
+    try {
+      // 1. OCR 실행
+      String ocrJson = ocrService.processOcr(file, message);
 
-    // Mock: OCR + LLM 처리 결과
-    return ContractExtractResponse.builder()
-      .contractInfo(ContractInfoDto.builder()
-        .title("웹 개발 프로젝트")
-        .amount(BigDecimal.valueOf(5000000))
-        .startDate(LocalDate.now().toString())
-        .endDate(LocalDate.now().plusMonths(3).toString())
-        .build())
-      .clientInfo(ClientInfoDto.builder()
-        .name("김의뢰")
-        .phone("010-1234-5678")
-        .build())
-      .freelancerInfo(FreelancerInfoDto.builder()
-        .name("이프리")
-        .phone("010-9876-5432")
-        .account("110-123-456789")
-        .bank("신한은행")
-        .build())
-      .build();
+      // 2. LLM 실행 (OCR을 통해 받아온 값을 넘겨줌)
+      String llmJson = geminiService.getRawGeminiResponse(ocrJson);
+
+      // 3. JSON → Map 변환
+      Map<String, Object> result = objectMapper.readValue(
+        llmJson,
+        new TypeReference<Map<String, Object>>() {
+        }
+      );
+
+      return ApiResponse.ok(result);
+
+    } catch (Exception e) {
+      // TODO : custom error 도입
+      throw new RuntimeException(e);
+    }
   }
 
   /**

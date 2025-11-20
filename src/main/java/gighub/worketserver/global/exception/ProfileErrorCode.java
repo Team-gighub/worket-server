@@ -9,12 +9,12 @@ public enum ProfileErrorCode implements ErrorCode {
   FREELANCER_PROFILE_NOT_FOUND(HttpStatus.FORBIDDEN, "AUTH_3001", "프리랜서 프로필이 존재하지 않습니다.");
 
   private final HttpStatus httpStatus;
-  private final String code;
+  private final String customCode;
   private final String message;
 
   ProfileErrorCode(HttpStatus httpStatus, String code, String message) {
     this.httpStatus = httpStatus;
-    this.code = code;
+    this.customCode = code;
     this.message = message;
   }
 }

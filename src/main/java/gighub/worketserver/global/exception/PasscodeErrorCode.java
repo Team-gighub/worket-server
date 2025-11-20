@@ -10,7 +10,7 @@ public enum PasscodeErrorCode implements ErrorCode {
   PASSCODE_EMPTY(HttpStatus.FORBIDDEN, "AUTH_2001", "패스코드가 비어 있습니다.");
 
   private final HttpStatus httpStatus;
-  private final String code;
+  private final String customCode;
   private final String message;
 }
 

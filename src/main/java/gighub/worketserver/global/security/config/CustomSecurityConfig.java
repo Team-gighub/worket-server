@@ -89,8 +89,8 @@ public class CustomSecurityConfig {
       )
 
       .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-      .addFilterBefore(passcodeCheckFilter, AuthorizationFilter.class)
-      .addFilterBefore(profileCheckFilter, AuthorizationFilter.class);
+      .addFilterAfter(passcodeCheckFilter, AuthorizationFilter.class)
+      .addFilterAfter(profileCheckFilter, AuthorizationFilter.class);
 
     return http.build();
   }
