@@ -20,3 +20,13 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id # 유저 정보 조회 시 반환되는 최상위 필드명으로 해야 한다.
+naver:
+  ocr:
+    secret: ${OCR_SECRET}
+    url: ${OCR_URL}
+
+
+gemini:
+  secret: ${GEMINI_SECRET}
+  model: ${GEMINI_MODEL}
+  url: ${GEMINI_URL}
