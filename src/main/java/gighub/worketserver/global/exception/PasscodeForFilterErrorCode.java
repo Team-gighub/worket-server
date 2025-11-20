@@ -1,0 +1,16 @@
+package gighub.worketserver.global.exception;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+@Getter
+@AllArgsConstructor
+public enum PasscodeForFilterErrorCode implements ErrorCode {
+  PASSCODE_EMPTY(HttpStatus.FORBIDDEN, "AUTH_2001", "패스코드가 등록되지 않았습니다.");
+
+  private final HttpStatus httpStatus;
+  private final String customCode;
+  private final String message;
+}
+
