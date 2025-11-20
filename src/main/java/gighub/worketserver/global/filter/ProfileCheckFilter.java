@@ -29,7 +29,8 @@ public class ProfileCheckFilter extends OncePerRequestFilter {
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String uri = request.getRequestURI();
     return uri.startsWith("/test")
-      || uri.startsWith("/oauth2");
+      || uri.startsWith("/oauth2")
+      || uri.startsWith("/auth/passcode");
   }
 
   @Override
