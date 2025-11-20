@@ -26,6 +26,15 @@ public class ProfileCheckFilter extends OncePerRequestFilter {
   private final FreelancerProfileRepository freelancerProfileRepository;
 
   @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String uri = request.getRequestURI();
+    return uri.startsWith("/test")
+      || uri.startsWith("/oauth2")
+      || uri.startsWith("/auth");
+  }
+
+
+  @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                   FilterChain filterChain)
     throws ServletException, IOException {
@@ -37,16 +46,16 @@ public class ProfileCheckFilter extends OncePerRequestFilter {
 
       User user = details.getUser();
 
-      // 프리랜서 프로필 체크
-      if (user.getRole() == Role.FREELANCER) {
-        Long userId = user.getId();
-        Optional<FreelancerProfile> profileOpt = freelancerProfileRepository.findByUserId(userId);
-
-        if (profileOpt.isEmpty()) {
-          request.setAttribute("exception", ProfileErrorCode.FREELANCER_PROFILE_NOT_FOUND);
-          throw new ProfileException(ProfileErrorCode.FREELANCER_PROFILE_NOT_FOUND);
-        }
-      }
+//      // 프리랜서 프로필 체크
+//      if (user.getRole() == Role.FREELANCER) {
+//        Long userId = user.getId();
+//        Optional<FreelancerProfile> profileOpt = freelancerProfileRepository.findByUserId(userId);
+//
+//        if (profileOpt.isEmpty()) {
+//          request.setAttribute("exception", ProfileErrorCode.FREELANCER_PROFILE_NOT_FOUND);
+//          throw new ProfileException(ProfileErrorCode.FREELANCER_PROFILE_NOT_FOUND);
+//        }
+//      }
 
       filterChain.doFilter(request, response);
     }

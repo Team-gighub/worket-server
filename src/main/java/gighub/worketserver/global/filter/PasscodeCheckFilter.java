@@ -21,6 +21,14 @@ import java.io.IOException;
 public class PasscodeCheckFilter extends OncePerRequestFilter {
 
   @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String uri = request.getRequestURI();
+    return uri.startsWith("/test")
+      || uri.startsWith("/oauth2")
+      || uri.startsWith("/auth");
+  }
+
+  @Override
   protected void doFilterInternal(HttpServletRequest request,
                                   HttpServletResponse response,
                                   FilterChain filterChain)
@@ -31,10 +39,10 @@ public class PasscodeCheckFilter extends OncePerRequestFilter {
     PrincipalDetails details = (PrincipalDetails) auth.getPrincipal();
     User user = details.getUser();
 
-    if (user.getPasscode() == null || user.getPasscode().isBlank()) {
-      request.setAttribute("exception", PasscodeErrorCode.PASSCODE_EMPTY);
-      throw new PasscodeException(PasscodeErrorCode.PASSCODE_EMPTY);
-    }
+//    if (user.getPasscode() == null || user.getPasscode().isBlank()) {
+//      request.setAttribute("exception", PasscodeErrorCode.PASSCODE_EMPTY);
+//      throw new PasscodeException(PasscodeErrorCode.PASSCODE_EMPTY);
+//    }
 
     filterChain.doFilter(request, response);
   }
