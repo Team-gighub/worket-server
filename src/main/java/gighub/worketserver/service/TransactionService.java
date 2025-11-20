@@ -122,12 +122,14 @@ public class TransactionService {
     Long userId = Long.parseLong(authentication.getName());
     log.info("Checking permission for user {} on transaction {}", userId, transactionId);
 
-    // (가정) 사용자 정보를 DB에서 조회합니다.
+    // 사용자 정보를 DB에서 조회합니다.
     User currentUser = userRepository.findById(userId)
+      //TODO: 에러 수정 필요
       .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인된 사용자 정보를 찾을 수 없습니다."));
 
     // 2. transactionId로 거래 조회 (EntityGraph로 N+1 문제 방지)
     Transaction transaction = transactionRepository.findByIdWithContractAndUsers(transactionId)
+      //TODO: 에러 수정 필요
       .orElseThrow(() -> {
         log.warn("Transaction not found. transactionId={}", transactionId);
         return new ResponseStatusException(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다.");
@@ -135,12 +137,14 @@ public class TransactionService {
 
     Contract contract = transaction.getContract();
     if (contract == null) {
+      //TODO: 에러 수정 필요
       log.error("Transaction {} has no associated contract.", transactionId);
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "거래에 연결된 계약이 없습니다.");
     }
 
     boolean permission = false;
     String role = null; // 초기 역할은 null
+    log.info("Access granted for freelancer: {}", contract.getFreelancer());
 
     // 3. 접근 권한 판단 로직
     if (contract.getClient() != null) {
@@ -157,15 +161,14 @@ public class TransactionService {
 
     } else {
       // Case B: 클라이언트가 등록되지 않은 사용자(clientId가 null)인 경우
-
+      log.info("client name: {}, client phone{}", contract.getClientName(),contract.getClientPhone());
       // 3-1. 현재 사용자가 이름/전화번호로 확인되는 미등록 클라이언트인지 확인
       if (currentUser.getName().equals(contract.getClientName())
         && currentUser.getPhone().equals(contract.getClientPhone())) {
-        permission = true;
-        role = Role.CLIENT.name();
-
         log.info("Access granted by Name/Phone for client: {}", contract.getClientName());
 
+        //TODO: 전역 에러 핸들링 포맷에 맞게 수정 + 커스텀 에러
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "이 거래의 클라이언트 정보와 사용자 정보가 일치하지만, 접근을 위해서는 클라이언트 계정 연동/등록이 필요합니다.");
       }
       // 3-2. 현재 사용자가 Freelancer인지 확인 (ID 기반)
       else if (userId.equals(contract.getFreelancer().getId())) {
@@ -179,6 +182,7 @@ public class TransactionService {
     // 4. 최종 권한 확인
     if (!permission) {
       log.warn("Access denied for user {} on transaction {}", userId, transactionId);
+      //TODO: 전역 에러 핸들링 포맷에 맞게 수정 + 커스텀 에러
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "거래에 대한 접근 권한이 없습니다.");
     }
 
