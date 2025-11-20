@@ -6,8 +6,9 @@ import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.domain.constants.Status;
 import gighub.worketserver.dto.UserDetailDto;
 import gighub.worketserver.dto.UserProfileDto;
-import gighub.worketserver.dto.UserUpdateDto;
 import gighub.worketserver.dto.UserUpdateRequest;
+import gighub.worketserver.global.exception.CommonErrorCode;
+import gighub.worketserver.global.exception.RestApiException;
 import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
 
 /**
  * 사용자(User) 관련 비즈니스 로직 Service
@@ -30,19 +30,14 @@ public class UserService {
   /**
    * 모든 사용자 조회 (관리자용)
    */
-  public List<User> findAllUsers() {
-    return userRepository.findAll();
-  }
 
-  /**
-   * 사용자 프로필 조회 (마이페이지)
-   */
   public UserProfileDto getUser(Long userId) {
+
     User user = userRepository.findById(userId)
-      .orElseThrow(() -> new RuntimeException("User not found"));
+      .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "유저를 찾을 수 없습니다"));
 
     return UserProfileDto.builder()
-      .id(user.getId())  // userId -> id로 변경
+      .id(user.getId())
       .name(user.getName())
       .provider(user.getProvider())
       .role(user.getRole().name())

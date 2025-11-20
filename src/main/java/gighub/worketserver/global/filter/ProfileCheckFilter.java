@@ -26,6 +26,15 @@ public class ProfileCheckFilter extends OncePerRequestFilter {
   private final FreelancerProfileRepository freelancerProfileRepository;
 
   @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String uri = request.getRequestURI();
+    return uri.startsWith("/test")
+      || uri.startsWith("/oauth2")
+      || uri.startsWith("/auth");
+  }
+
+
+  @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                   FilterChain filterChain)
     throws ServletException, IOException {

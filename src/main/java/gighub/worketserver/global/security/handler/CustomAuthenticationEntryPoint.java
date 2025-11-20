@@ -32,16 +32,16 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     if (ex instanceof TokenErrorCode token) {
       status = token.getHttpStatus().value();
       message = token.getMessage();
-      code = token.getCode();
+      code = token.getCustomCode();
     } else if (ex instanceof PasscodeErrorCode pass) {
       status = pass.getHttpStatus().value();
       message = pass.getMessage();
-      code = pass.getCode();
+      code = pass.getCustomCode();
 
     } else if (ex instanceof ProfileErrorCode profile) {
       status = profile.getHttpStatus().value();
       message = profile.getMessage();
-      code = profile.getCode();
+      code = profile.getCustomCode();
 
     } else {
       // 둘 다 아니면 기본값
@@ -56,7 +56,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response.setCharacterEncoding("UTF-8");
 
-    ApiResponse<Void> body = ApiResponse.error(message, code);
+    ApiResponse<Void> body = ApiResponse.error(message, code, status);
 
     response.getWriter().write(objectMapper.writeValueAsString(body));
   }
