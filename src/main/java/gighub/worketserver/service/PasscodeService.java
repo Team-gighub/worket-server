@@ -31,15 +31,16 @@ public class PasscodeService {
     public void verifyPasscode(Long userId, String rawPasscode) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException());
-
+                .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "유저를 찾을 수 없습니다."));
 
         if (user.getPasscode() == null) {
             throw new PasscodeException(PasscodeErrorCode.PASSCODE_EMPTY);
         }
 
         if (!passwordEncoder.matches(rawPasscode, user.getPasscode())) {
-            throw new PasscodeException(PasscodeErrorCode.INVALID_PASSCODE);
+            // 왜 500으로 빠지는지 모르겠음
+//            throw new PasscodeException(PasscodeErrorCode.INVALID_PASSCODE);
+            throw new RestApiException(CommonErrorCode.UNAUTHORIZED_REQUEST, "패스코드가 틀렸습니다.");
         }
     }
 }
