@@ -46,16 +46,16 @@ public class ProfileCheckFilter extends OncePerRequestFilter {
 
       User user = details.getUser();
 
-//      // 프리랜서 프로필 체크
-//      if (user.getRole() == Role.FREELANCER) {
-//        Long userId = user.getId();
-//        Optional<FreelancerProfile> profileOpt = freelancerProfileRepository.findByUserId(userId);
-//
-//        if (profileOpt.isEmpty()) {
-//          request.setAttribute("exception", ProfileErrorCode.FREELANCER_PROFILE_NOT_FOUND);
-//          throw new ProfileException(ProfileErrorCode.FREELANCER_PROFILE_NOT_FOUND);
-//        }
-//      }
+      // 프리랜서 프로필 체크
+      if (user.getRole() == Role.FREELANCER) {
+        Long userId = user.getId();
+        Optional<FreelancerProfile> profileOpt = freelancerProfileRepository.findByUserId(userId);
+
+        if (profileOpt.isEmpty()) {
+          request.setAttribute("exception", ProfileErrorCode.FREELANCER_PROFILE_NOT_FOUND);
+          throw new ProfileException(ProfileErrorCode.FREELANCER_PROFILE_NOT_FOUND);
+        }
+      }
 
       filterChain.doFilter(request, response);
     }

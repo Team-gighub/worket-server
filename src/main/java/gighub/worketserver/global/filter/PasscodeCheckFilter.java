@@ -39,10 +39,10 @@ public class PasscodeCheckFilter extends OncePerRequestFilter {
     PrincipalDetails details = (PrincipalDetails) auth.getPrincipal();
     User user = details.getUser();
 
-//    if (user.getPasscode() == null || user.getPasscode().isBlank()) {
-//      request.setAttribute("exception", PasscodeErrorCode.PASSCODE_EMPTY);
-//      throw new PasscodeException(PasscodeErrorCode.PASSCODE_EMPTY);
-//    }
+    if (user.getPasscode() == null || user.getPasscode().isBlank()) {
+      request.setAttribute("exception", PasscodeErrorCode.PASSCODE_EMPTY);
+      throw new PasscodeException(PasscodeErrorCode.PASSCODE_EMPTY);
+    }
 
     filterChain.doFilter(request, response);
   }
