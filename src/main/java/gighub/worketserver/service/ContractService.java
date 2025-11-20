@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -38,6 +37,7 @@ public class ContractService {
   private final OcrService ocrService;
   private final GeminiService geminiService;
   private final ObjectMapper objectMapper;
+
 
   /**
    * 계약서 추출 (OCR + LLM)
@@ -77,23 +77,25 @@ public class ContractService {
     User freelancer = userRepository.findById(userId)
       .orElseThrow(() -> new RuntimeException("User not found"));
 
-    // Mock: Contract 생성
+
+    // Contract 생성
     Contract contract = Contract.builder()
       .type(request.getType())
       .title(request.getContractInfo().getTitle())
       .amount(request.getContractInfo().getAmount())
       .startDate(LocalDate.parse(request.getContractInfo().getStartDate()))
       .endDate(LocalDate.parse(request.getContractInfo().getEndDate()))
-      .freelancer(freelancer)  // User 객체로 설정
-      .clientName(request.getClientInfo().getName())
-      .clientPhone(request.getClientInfo().getPhone())
+      .freelancer(freelancer)  // 프리랜서 객체
+      .clientName(request.getClientInfo().getName()) //클라이언트 이름
+      .clientPhone(request.getClientInfo().getPhone())//클라이언트 전화번호
       .build();
 
+    //계약서 생성
     Contract savedContract = contractRepository.save(contract);
 
-    // Mock: Transaction 생성
+    // Transaction 생성
     Transaction transaction = Transaction.builder()
-      .contract(savedContract)
+      .contract(savedContract) //생성된 계약서 주입
       .amount(request.getContractInfo().getAmount())
       .freelancerBank(request.getFreelancerInfo().getBank())
       .freelancerAccount(request.getFreelancerInfo().getAccount())
@@ -101,10 +103,13 @@ public class ContractService {
       .createdAt(LocalDateTime.now())
       .build();
 
+    // Transaction 저장
     Transaction savedTransaction = transactionRepository.save(transaction);
+    //System.out.println(savedTransaction.getId());
 
     return ContractCreateResponse.builder()
-      .transactionId(savedTransaction.getId())
+      .transactionId(savedTransaction.getId()) //거래 ID
+      .contractId(savedContract.getId()) // 계약 ID
       .build();
   }
 
@@ -116,11 +121,18 @@ public class ContractService {
     Long userId = Long.parseLong(authentication.getName());
     log.info("Registering signature for contract {} by user {}", contractId, userId);
 
-    // Mock: 서명 저장 로직
+    // 서명 저장 로직
     Contract contract = contractRepository.findById(contractId)
       .orElseThrow(() -> new RuntimeException("Contract not found"));
 
     // TODO: 서명 URL 저장, Transaction 상태 업데이트
+    contract.updateFreelancerSignUrl(request.getSignatureUrl());
+    contractRepository.save(contract);
+    Transaction transaction = transactionRepository.findByContract(contract);
+    TransactionStatus status = TransactionStatus.SIGNED;
+
+    transaction.updateStatus(status);
+    transactionRepository.save(transaction);
     log.info("Signature URL: {}", request.getSignatureUrl());
   }
 }
