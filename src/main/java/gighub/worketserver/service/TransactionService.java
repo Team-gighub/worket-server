@@ -6,6 +6,7 @@ import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
+import gighub.worketserver.global.exception.*;
 import gighub.worketserver.repository.TransactionRepository;
 import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+
 
 /**
  * 거래(Transaction) 관련 비즈니스 로직 Service
@@ -96,8 +99,7 @@ public class TransactionService {
     Transaction transaction = transactionRepository.findByIdWithContractAndUsers(transactionId)
       .orElseThrow(() -> {
         log.warn("Transaction preview not found for ID: {}", transactionId);
-        //TODO: 전역 에러 핸들러로 수정 필요 [거래 없을 경우]
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다.");
+        throw new RestApiException(CommonErrorCode.NOT_FOUND, "거래를 찾을 수 없습니다.");
       });
 
 
@@ -124,22 +126,19 @@ public class TransactionService {
 
     // 사용자 정보를 DB에서 조회합니다.
     User currentUser = userRepository.findById(userId)
-      //TODO: 에러 수정 필요
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인된 사용자 정보를 찾을 수 없습니다."));
+      .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
     // 2. transactionId로 거래 조회 (EntityGraph로 N+1 문제 방지)
     Transaction transaction = transactionRepository.findByIdWithContractAndUsers(transactionId)
-      //TODO: 에러 수정 필요
       .orElseThrow(() -> {
         log.warn("Transaction not found. transactionId={}", transactionId);
-        return new ResponseStatusException(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다.");
+        return new RestApiException(CommonErrorCode.NOT_FOUND, "거래를 찾을 수 없습니다.");
       });
 
     Contract contract = transaction.getContract();
     if (contract == null) {
-      //TODO: 에러 수정 필요
       log.error("Transaction {} has no associated contract.", transactionId);
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "거래에 연결된 계약이 없습니다.");
+      throw new RestApiException(CommonErrorCode.NOT_FOUND, "거래에 연결된 계약이 없습니다.");
     }
 
     boolean permission = false;
@@ -167,9 +166,9 @@ public class TransactionService {
         && currentUser.getPhone().equals(contract.getClientPhone())) {
         log.info("Access granted by Name/Phone for client: {}", contract.getClientName());
 
-        //TODO: 전역 에러 핸들링 포맷에 맞게 수정 + 커스텀 에러
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "이 거래의 클라이언트 정보와 사용자 정보가 일치하지만, 접근을 위해서는 클라이언트 계정 연동/등록이 필요합니다.");
+        throw new TransactionException(TransactionErrorCode.CLIENT_LINKAGE_REQUIRED);
       }
+
       // 3-2. 현재 사용자가 Freelancer인지 확인 (ID 기반)
       else if (userId.equals(contract.getFreelancer().getId())) {
         permission = true;
@@ -182,8 +181,7 @@ public class TransactionService {
     // 4. 최종 권한 확인
     if (!permission) {
       log.warn("Access denied for user {} on transaction {}", userId, transactionId);
-      //TODO: 전역 에러 핸들링 포맷에 맞게 수정 + 커스텀 에러
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "거래에 대한 접근 권한이 없습니다.");
+      throw new TransactionException(TransactionErrorCode.TRANSACTION_ACCESS_DENIED);
     }
 
     return new TransactionPermissionResponse(role,permission);
