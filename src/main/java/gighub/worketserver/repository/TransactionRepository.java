@@ -30,22 +30,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 //    @Param("status") TransactionStatus status
 //  );
 
-  @EntityGraph(attributePaths = {
-    "contract", // 1단계: Transaction -> Contract 로딩
-    "contract.freelancer", // 2단계: Contract -> Freelancer(User) 로딩
-    "contract.client" // 2단계: Contract -> Client(User) 로딩
-  })
-    // 💡 JpaRepository의 기본 메서드를 오버라이드하여 EntityGraph를 적용합니다.
-  Optional<Transaction> findById(Long id);
+  /**
+   * 기본 findById 오버라이드 (EntityGraph 적용)
+   * 이렇게 하면 코드 변경 없이 자동으로 EntityGraph 적용
+   */
 
   @Query("""
     SELECT t FROM Transaction t
-    JOIN FETCH t.contract c
-    JOIN FETCH c.client cl
-    JOIN FETCH c.freelancer fr
-    WHERE t.id = :transactionId
-      AND (cl.id = :userId OR fr.id = :userId)
-  """)
-  Optional<Transaction> findByIdAndUserId(Long transactionId, Long userId);
+    LEFT JOIN FETCH t.contract c
+    LEFT JOIN FETCH c.client
+    LEFT JOIN FETCH c.freelancer
+    WHERE t.id = :id
+""")
+  Optional<Transaction> findByIdWithContractAndUsers(@Param("id") Long id);
+
+
 
 }

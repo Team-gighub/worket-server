@@ -7,6 +7,7 @@ import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
 import gighub.worketserver.repository.TransactionRepository;
+import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -31,6 +32,7 @@ import java.util.List;
 public class TransactionService {
 
   private final TransactionRepository transactionRepository;
+  private final UserRepository userRepository;
 
   /**
    * 거래 전체 조회 (월별)
@@ -91,22 +93,22 @@ public class TransactionService {
   public TransactionPreviewResponse getTransactionPreview(Long transactionId) {
     log.info("Getting transaction preview for transaction {}", transactionId);
 
-    Transaction transaction = transactionRepository.findById(transactionId)
+    Transaction transaction = transactionRepository.findByIdWithContractAndUsers(transactionId)
       .orElseThrow(() -> {
         log.warn("Transaction preview not found for ID: {}", transactionId);
-        //TODO: 전역 에러 핸들러로 수정 필요
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "transactionId를 찾을 수 없습니다.");
+        //TODO: 전역 에러 핸들러로 수정 필요 [거래 없을 경우]
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다.");
       });
 
 
     Contract contract = transaction.getContract();
     User freelancer = contract.getFreelancer();
-    User client = contract.getClient();
 
     return TransactionPreviewResponse.builder()
       .title(contract.getTitle())
       .freelancerName(freelancer.getName())
-      .clientName(client.getName())
+      //client가 매핑되지 않은 경우를 고려해 contract에 있는 clientName반환
+      .clientName(contract.getClientName())
       .build();
   }
 
@@ -116,28 +118,73 @@ public class TransactionService {
    */
   @Transactional(readOnly = true)
   public TransactionPermissionResponse checkPermission(Authentication authentication, Long transactionId) {
-    // 1. 토큰에서 사용자 ID 추출
+    // 1. 토큰에서 사용자 ID 추출 및 사용자 정보 조회
     Long userId = Long.parseLong(authentication.getName());
     log.info("Checking permission for user {} on transaction {}", userId, transactionId);
 
-    // 내 거래일 때만 조회됨
-    Transaction transaction = transactionRepository.findByIdAndUserId(transactionId, userId)
-      .orElseThrow(() -> {
-        log.warn("Permission denied or transaction not found. userId={}, transactionId={}",
-          userId, transactionId);
+    // (가정) 사용자 정보를 DB에서 조회합니다.
+    User currentUser = userRepository.findById(userId)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인된 사용자 정보를 찾을 수 없습니다."));
 
-        //TODO: 전역 에러 핸들러로 수정 필요
-        return new ResponseStatusException(HttpStatus.FORBIDDEN, "해당 거래에 접근할 수 없습니다.");
+    // 2. transactionId로 거래 조회 (EntityGraph로 N+1 문제 방지)
+    Transaction transaction = transactionRepository.findByIdWithContractAndUsers(transactionId)
+      .orElseThrow(() -> {
+        log.warn("Transaction not found. transactionId={}", transactionId);
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다.");
       });
 
     Contract contract = transaction.getContract();
-    Long clientId = contract.getClient().getId();
+    if (contract == null) {
+      log.error("Transaction {} has no associated contract.", transactionId);
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "거래에 연결된 계약이 없습니다.");
+    }
 
-    return TransactionPermissionResponse.builder()
-      .userRole(userId.equals(clientId) ? Role.CLIENT.name() : Role.FREELANCER.name())
-      .permission(true)
-      .build();
+    boolean permission = false;
+    String role = null; // 초기 역할은 null
+
+    // 3. 접근 권한 판단 로직
+    if (contract.getClient() != null) {
+      // Case A: 클라이언트가 등록된 사용자(clientId가 존재)인 경우 -> ID 기반 접근 권한 판단
+      Long clientId = contract.getClient().getId();
+
+      if (userId.equals(clientId)) {
+        permission = true;
+        role = Role.CLIENT.name();
+      } else if (userId.equals(contract.getFreelancer().getId())) {
+        permission = true;
+        role = Role.FREELANCER.name();
+      }
+
+    } else {
+      // Case B: 클라이언트가 등록되지 않은 사용자(clientId가 null)인 경우
+
+      // 3-1. 현재 사용자가 이름/전화번호로 확인되는 미등록 클라이언트인지 확인
+      if (currentUser.getName().equals(contract.getClientName())
+        && currentUser.getPhone().equals(contract.getClientPhone())) {
+        permission = true;
+        role = Role.CLIENT.name();
+
+        log.info("Access granted by Name/Phone for client: {}", contract.getClientName());
+
+      }
+      // 3-2. 현재 사용자가 Freelancer인지 확인 (ID 기반)
+      else if (userId.equals(contract.getFreelancer().getId())) {
+        permission = true;
+        role = Role.FREELANCER.name();
+
+        log.info("Access granted for freelancer: {}", userId);
+      }
+    }
+
+    // 4. 최종 권한 확인
+    if (!permission) {
+      log.warn("Access denied for user {} on transaction {}", userId, transactionId);
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "거래에 대한 접근 권한이 없습니다.");
+    }
+
+    return new TransactionPermissionResponse(role,permission);
   }
+
 
   /**
    * 거래 상세 조회
