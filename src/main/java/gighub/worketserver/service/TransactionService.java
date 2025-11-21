@@ -6,7 +6,10 @@ import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
-import gighub.worketserver.global.exception.*;
+import gighub.worketserver.global.exception.CommonErrorCode;
+import gighub.worketserver.global.exception.RestApiException;
+import gighub.worketserver.global.exception.TransactionErrorCode;
+import gighub.worketserver.global.exception.TransactionException;
 import gighub.worketserver.repository.TransactionRepository;
 import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +22,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 거래(Transaction) 관련 비즈니스 로직 Service
@@ -37,6 +42,9 @@ public class TransactionService {
   private final TransactionRepository transactionRepository;
   private final UserRepository userRepository;
 
+  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+  private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
   /**
    * 거래 전체 조회 (월별)
    */
@@ -49,37 +57,31 @@ public class TransactionService {
 
     log.info("Getting transactions for user {} - {}/{}", userId, year, month);
 
-    // Mock: 거래 목록 생성
-    List<TransactionSummaryDto> contractList = new ArrayList<>();
-    contractList.add(TransactionSummaryDto.builder()
-      .transactionId(1L)
-      .title("웹 개발 프로젝트")
-      .status(TransactionStatus.SIGNED.name())
-      .amount(BigDecimal.valueOf(5000000))
-      .startDate(LocalDate.of(year, month, 1).toString())
-      .endDate(LocalDate.of(year, month, 15).toString())
-      .build());
+    // 1. 사용자 정보 조회
+    User user = userRepository.findById(userId)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
 
-    contractList.add(TransactionSummaryDto.builder()
-      .transactionId(2L)
-      .title("앱 디자인 프로젝트")
-      .status(TransactionStatus.DEPOSIT_HOLD.name())
-      .amount(BigDecimal.valueOf(3000000))
-      .startDate(LocalDate.of(year, month, 5).toString())
-      .endDate(LocalDate.of(year, month, 20).toString())
-      .build());
+    // 2. 해당 월의 거래 목록 조회
+    List<Transaction> transactions = transactionRepository
+      .findByFreelancerIdAndYearMonth(userId, year, month);
 
-    // Mock: 상태별 건수
-    List<StatusCountDto> statusCounts = new ArrayList<>();
-    statusCounts.add(new StatusCountDto("CREATED", 2));
-    statusCounts.add(new StatusCountDto("SIGNED", 5));
-    statusCounts.add(new StatusCountDto("DEPOSIT_HOLD", 3));
-    statusCounts.add(new StatusCountDto("PAYMENT_CONFIRMED", 1));
-    statusCounts.add(new StatusCountDto("SETTLED", 10));
+    // 3. 거래 목록을 DTO로 변환
+    List<TransactionSummaryDto> contractList = transactions.stream()
+      .map(this::convertToTransactionSummary)
+      .collect(Collectors.toList());
 
+    // 4. 해당 월의 총 거래 금액 계산
+    BigDecimal totalAmount = transactions.stream()
+      .map(Transaction::getAmount)
+      .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    // 5. 상태별 건수 계산 (해당 월의 거래만)
+    List<StatusCountDto> statusCounts = calculateStatusCountsForMonth(transactions);
+
+    // 6. 응답 생성
     return TransactionListResponse.builder()
-      .freelancerName("이프리랜서")
-      .totalAmount("8000000")
+      .freelancerName(user.getName())
+      .totalAmount(totalAmount.toString())
       .statusCounts(statusCounts)
       .contractList(contractList)
       .build();
@@ -187,43 +189,99 @@ public class TransactionService {
     return new TransactionPermissionResponse(role,permission);
   }
 
-
   /**
    * 거래 상세 조회
    */
-  public TransactionDetailResponse getTransactionDetail(
-    Authentication authentication,
-    Long transactionId) {
+  public TransactionDetailResponse getTransactionDetail(Authentication authentication, Long transactionId) {
     Long userId = Long.parseLong(authentication.getName());
     log.info("Getting transaction detail for transaction {} by user {}", transactionId, userId);
 
-    // Mock: 거래 상세 정보
+    // 1단계: Transaction 존재 여부 확인
+    if (!transactionRepository.existsByTransactionId(transactionId)) {
+      log.warn("Transaction not found: {}", transactionId);
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다.");
+    }
+
+    // 2단계: 권한 확인 (프리랜서 또는 의뢰인인지)
+    if (!transactionRepository.hasPermission(transactionId, userId)) {
+      log.warn("User {} has no permission for transaction {}", userId, transactionId);
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "거래에 대한 접근 권한이 없습니다.");
+    }
+
+    // 3단계: 실제 데이터 조회 (LEFT JOIN FETCH)
+    Transaction transaction = transactionRepository.findByIdWithContractAndUsers(transactionId)
+      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."));
+
+    Contract contract = transaction.getContract();
+
+    // 4단계: DTO 변환 시 null 안전 처리
+    ClientInfoDto clientInfoDto = null;
+    FreelancerInfoDto freelancerInfoDto = null;
+    if (contract != null) {
+      if (contract.getClient() != null) {
+        clientInfoDto = ClientInfoDto.builder()
+          .name(contract.getClient().getName())
+          .phone(contract.getClient().getPhone())
+          .build();
+      }
+      if (contract.getFreelancer() != null) {
+        freelancerInfoDto = FreelancerInfoDto.builder()
+          .name(contract.getFreelancer().getName())
+          .phone(contract.getFreelancer().getPhone())
+          .account(transaction.getFreelancerAccount())
+          .bank(transaction.getFreelancerBank())
+          .build();
+      }
+    }
+
     return TransactionDetailResponse.builder()
-      .status(TransactionStatus.SIGNED.name())
-      .signedAt(LocalDateTime.now().minusDays(5).toString())
-      .depositHoldAt(null)
-      .paymentConfirmedAt(null)
-      .settledAt(null)
-      .createdAt(LocalDateTime.now().minusDays(10).toString())
-      .contractId(1L)
-      .settledAmount(BigDecimal.valueOf(5000000))
-      .contractFileUrl("https://s3.amazonaws.com/bucket/contract-1.pdf")
-      .contractInfo(ContractInfoDto.builder()
-        .title("웹 개발 프로젝트")
-        .amount(BigDecimal.valueOf(5000000))
-        .startDate(LocalDate.now().minusDays(5).toString())
-        .endDate(LocalDate.now().plusDays(85).toString())
-        .build())
-      .clientInfo(ClientInfoDto.builder()
-        .name("김의뢰인")
-        .phone("010-1234-5678")
-        .build())
-      .freelancerInfo(FreelancerInfoDto.builder()
-        .name("이프리랜서")
-        .phone("010-9876-5432")
-        .account("110-123-456789")
-        .bank("신한은행")
-        .build())
+      .status(transaction.getStatus() != null ? transaction.getStatus().name() : null)
+      .signedAt(transaction.getSignedAt() != null ? transaction.getSignedAt().format(DATETIME_FORMATTER) : null)
+      .depositHoldAt(transaction.getDepositHoldAt() != null ? transaction.getDepositHoldAt().format(DATETIME_FORMATTER) : null)
+      .paymentConfirmedAt(transaction.getPaymentConfirmedAt() != null ? transaction.getPaymentConfirmedAt().format(DATETIME_FORMATTER) : null)
+      .settledAt(transaction.getSettledAt() != null ? transaction.getSettledAt().format(DATETIME_FORMATTER) : null)
+      .createdAt(transaction.getCreatedAt() != null ? transaction.getCreatedAt().format(DATETIME_FORMATTER) : null)
+      .contractId(contract != null ? contract.getId() : null)
+      .settledAmount(transaction.getSettlementAmount())
+      .contractFileUrl(contract != null ? "https://s3.amazonaws.com/bucket/contract-" + contract.getId() + ".pdf" : null)
+      .contractInfo(contract != null ? ContractInfoDto.builder()
+        .title(contract.getTitle())
+        .amount(contract.getAmount())
+        .startDate(contract.getStartDate() != null ? contract.getStartDate().format(DATE_FORMATTER) : null)
+        .endDate(contract.getEndDate() != null ? contract.getEndDate().format(DATE_FORMATTER) : null)
+        .build() : null)
+      .clientInfo(clientInfoDto)
+      .freelancerInfo(freelancerInfoDto)
       .build();
+  }
+
+  /**
+   * Transaction을 TransactionSummaryDto로 변환
+   */
+  private TransactionSummaryDto convertToTransactionSummary(Transaction transaction) {
+    Contract contract = transaction.getContract();
+    return TransactionSummaryDto.builder()
+      .transactionId(transaction.getId())
+      .title(contract != null ? contract.getTitle() : null)
+      .status(transaction.getStatus() != null ? transaction.getStatus().name() : null)
+      .amount(transaction.getAmount())
+      .startDate(contract != null && contract.getStartDate() != null ? contract.getStartDate().format(DATE_FORMATTER) : null)
+      .endDate(contract != null && contract.getEndDate() != null ? contract.getEndDate().format(DATE_FORMATTER) : null)
+      .build();
+  }
+
+  /**
+   * 상태별 거래 건수 계산 (해당 월의 거래만)
+   */
+  private List<StatusCountDto> calculateStatusCountsForMonth(List<Transaction> transactions) {
+    Map<TransactionStatus, Long> statusCountMap = transactions.stream()
+      .collect(Collectors.groupingBy(Transaction::getStatus, Collectors.counting()));
+
+    return Arrays.stream(TransactionStatus.values())
+      .map(status -> new StatusCountDto(
+        status.name(),
+        statusCountMap.getOrDefault(status, 0L).intValue()
+      ))
+      .collect(Collectors.toList());
   }
 }
