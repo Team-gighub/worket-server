@@ -1,12 +1,8 @@
 package gighub.worketserver.dto;
 
-import lombok.*;
+import lombok.Getter;
 
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class PasscodeRegisterRequest {
-  private String pin;
+  private String passcode;
 }

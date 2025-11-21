@@ -1,5 +1,6 @@
 package gighub.worketserver.controller;
 
+import gighub.worketserver.dto.PasscodeRegisterRequest;
 import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.service.PasscodeService;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +21,11 @@ public class PasscodeController {
 
   @PostMapping("/register")
   public ApiResponse<?> register(
-    @RequestBody Map<String, String> body,
+    @RequestBody PasscodeRegisterRequest request,
     Authentication authentication
   ) {
     Long userId = Long.parseLong(authentication.getName());
-    String passcode = body.get("passcode");
+    String passcode = request.getPasscode();
 
     passcodeService.registerPasscode(userId, passcode);
 
