@@ -108,19 +108,17 @@ public class UserService {
     FreelancerProfile profile;
 
     if (optionalProfile.isEmpty()) {
-      // 생성
+      // 생성: 프론트 SignUp 단계에서는 업종/업력만 보내기 때문에 이것만 세팅
       profile = FreelancerProfile.builder()
         .user(user)
-        .birthDate(req.getBirthDate())
-        .gender(req.getGender())
         .businessSector(req.getBusinessSector())
         .businessSectorYears(req.getBusinessSectorYears())
-        .businessRegistrationNumber(req.getBusinessRegistrationNumber())
         .build();
 
       freelancerProfileRepository.save(profile);
+
     } else {
-      // 수정
+      // 갱신
       profile = optionalProfile.get();
 
       profile.updateProfile(
