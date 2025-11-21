@@ -6,6 +6,8 @@ import gighub.worketserver.domain.constants.Gender;
 import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.domain.constants.Status;
 import gighub.worketserver.dto.*;
+import gighub.worketserver.global.exception.CommonErrorCode;
+import gighub.worketserver.global.exception.RestApiException;
 import gighub.worketserver.repository.FreelancerProfileRepository;
 import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +86,7 @@ public class UserService {
         new RestApiException(CommonErrorCode.NOT_FOUND, "유저를 찾을 수 없습니다.")
       );
 
-    FreelancerProfile profile = freelancerProfileRepository.findByUser(user)
+    FreelancerProfile profile = freelancerProfileRepository.findByUserId(userId)
       .orElseThrow(() ->
         new RestApiException(CommonErrorCode.NOT_FOUND, "프로필을 찾을 수 없습니다.")
       );
@@ -101,7 +103,7 @@ public class UserService {
       );
 
     Optional<FreelancerProfile> optionalProfile =
-      freelancerProfileRepository.findByUser(user);
+      freelancerProfileRepository.findByUserId(userId);
 
     FreelancerProfile profile;
 

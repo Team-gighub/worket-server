@@ -19,11 +19,11 @@ import java.util.List;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/users")
 public class UserController {
 
   private final UserService userService;
 
+  // 프리랜서 프로필을 생성 조회 하기 위한 API
   @PostMapping("/me")
   public ApiResponse<UserProfileDto> createOrUpdateProfile(
     @RequestBody UserProfileRequest request,
@@ -34,6 +34,7 @@ public class UserController {
     return ApiResponse.ok(dto);
   }
 
+  // 토큰에 담긴 id  (자신의) 프로필을 조회하는 API
   @GetMapping("/me")
   public ApiResponse<UserProfileDto> getMyProfile(Authentication authentication) {
     Long userId = Long.parseLong(authentication.getName());
