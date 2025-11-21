@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gighub.worketserver.domain.Contract;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.User;
+import gighub.worketserver.domain.constants.ContractType;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
 import gighub.worketserver.global.response.ApiResponse;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -93,15 +95,33 @@ public class ContractService {
     //계약서 생성
     Contract savedContract = contractRepository.save(contract);
 
-    // Transaction 생성
-    Transaction transaction = Transaction.builder()
-      .contract(savedContract) //생성된 계약서 주입
-      .amount(request.getContractInfo().getAmount())
-      .freelancerBank(request.getFreelancerInfo().getBank())
-      .freelancerAccount(request.getFreelancerInfo().getAccount())
-      .status(TransactionStatus.CREATED)
-      .createdAt(LocalDateTime.now())
-      .build();
+    ContractType type = request.getType();
+    Transaction transaction;
+
+    if (type.equals(ContractType.UPLOAD)) {
+      //업로드는 거래 타입이 SINGED
+      transaction = Transaction.builder()
+        .contract(savedContract) //생성된 계약서 주입
+        .amount(request.getContractInfo().getAmount())
+        .freelancerBank(request.getFreelancerInfo().getBank())
+        .freelancerAccount(request.getFreelancerInfo().getAccount())
+        .status(TransactionStatus.SIGNED)
+        .createdAt(LocalDateTime.now())
+        .build();
+    } else if (type.equals(ContractType.CREATED)) {
+      //생성은 거래 타입이 CREATED
+      transaction = Transaction.builder()
+        .contract(savedContract) //생성된 계약서 주입
+        .amount(request.getContractInfo().getAmount())
+        .freelancerBank(request.getFreelancerInfo().getBank())
+        .freelancerAccount(request.getFreelancerInfo().getAccount())
+        .status(TransactionStatus.CREATED)
+        .createdAt(LocalDateTime.now())
+        .build();
+    } else {
+      throw new IllegalArgumentException("지원되지 않는 계약 타입입니다: " + type);
+    }
+
 
     // Transaction 저장
     Transaction savedTransaction = transactionRepository.save(transaction);
