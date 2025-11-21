@@ -79,7 +79,7 @@ public class UserService {
     user.updateStatus(status);
   }
 
-  public UserProfileDto getUserProfile(Long userId) {
+  public UserProfileResponse getUserProfile(Long userId) {
 
     User user = userRepository.findById(userId)
       .orElseThrow(() ->
@@ -91,11 +91,11 @@ public class UserService {
         new RestApiException(CommonErrorCode.NOT_FOUND, "프로필을 찾을 수 없습니다.")
       );
 
-    return UserProfileDto.from(user, profile);
+    return UserProfileResponse.from(user, profile);
   }
 
   @Transactional
-  public UserProfileDto createOrUpdateProfile(Long userId, UserProfileRequest req) {
+  public UserProfileResponse createOrUpdateProfile(Long userId, UserProfileRequest req) {
 
     User user = userRepository.findById(userId)
       .orElseThrow(() ->
@@ -130,6 +130,6 @@ public class UserService {
       );
     }
 
-    return UserProfileDto.from(user, profile);
+    return UserProfileResponse.from(user, profile);
   }
 }

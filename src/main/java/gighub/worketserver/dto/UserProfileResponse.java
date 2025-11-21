@@ -11,7 +11,7 @@ import java.time.LocalDate;
 
 @Getter
 @Builder
-public class UserProfileDto {
+public class UserProfileResponse {
   private String name;
   private Role role;
   private String phone;
@@ -21,8 +21,8 @@ public class UserProfileDto {
   private Long businessSectorYears;
   private String businessRegistrationNumber;
 
-  public static UserProfileDto from(User user, FreelancerProfile profile) {
-    return UserProfileDto.builder()
+  public static UserProfileResponse from(User user, FreelancerProfile profile) {
+    return UserProfileResponse.builder()
       .name(user.getName())
       .role(user.getRole())
       .phone(user.getPhone())
