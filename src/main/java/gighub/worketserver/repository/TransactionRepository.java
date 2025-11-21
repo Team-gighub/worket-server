@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
@@ -29,4 +30,18 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 //    @Param("status") TransactionStatus status
 //  );
   Transaction findByContract(Contract contract);
+
+
+
+  @Query("""
+    SELECT t FROM Transaction t
+    LEFT JOIN FETCH t.contract c
+    LEFT JOIN FETCH c.client
+    LEFT JOIN FETCH c.freelancer
+    WHERE t.id = :id
+  """)
+  Optional<Transaction> findByIdWithContractAndUsers(@Param("id") Long id);
+
+
+
 }
