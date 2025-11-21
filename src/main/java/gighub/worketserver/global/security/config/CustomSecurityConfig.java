@@ -71,6 +71,7 @@ public class CustomSecurityConfig {
         .requestMatchers("/oauth2/**").permitAll()
         .requestMatchers("/auth/token/**").permitAll()
         .requestMatchers("/test").permitAll()
+        .requestMatchers("/transactions/*/preview").permitAll()
         .anyRequest().authenticated()
       )
 
@@ -90,8 +91,8 @@ public class CustomSecurityConfig {
       )
 
       .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-      .addFilterAfter(passcodeCheckFilter, AuthorizationFilter.class)
-      .addFilterAfter(profileCheckFilter, AuthorizationFilter.class);
+      .addFilterAfter(profileCheckFilter, AuthorizationFilter.class)
+      .addFilterAfter(passcodeCheckFilter, AuthorizationFilter.class);
 
     return http.build();
   }
