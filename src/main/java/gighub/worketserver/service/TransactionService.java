@@ -59,7 +59,8 @@ public class TransactionService {
 
     // 1. 사용자 정보 조회
     User user = userRepository.findById(userId)
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+      .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "거래를 찾을 수 없습니다."));
+
 
     // 2. 해당 월의 거래 목록 조회
     List<Transaction> transactions = transactionRepository
@@ -199,18 +200,18 @@ public class TransactionService {
     // 1단계: Transaction 존재 여부 확인
     if (!transactionRepository.existsByTransactionId(transactionId)) {
       log.warn("Transaction not found: {}", transactionId);
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다.");
+      throw new RestApiException(CommonErrorCode.NOT_FOUND, "거래를 찾을 수 없습니다.");
     }
 
     // 2단계: 권한 확인 (프리랜서 또는 의뢰인인지)
     if (!transactionRepository.hasPermission(transactionId, userId)) {
       log.warn("User {} has no permission for transaction {}", userId, transactionId);
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "거래에 대한 접근 권한이 없습니다.");
+      throw new RestApiException(CommonErrorCode.FORBIDDEN_ACCESS, "거래에 대한 접근 권한이 없습니다.");
     }
 
     // 3단계: 실제 데이터 조회 (LEFT JOIN FETCH)
     Transaction transaction = transactionRepository.findByIdWithContractAndUsers(transactionId)
-      .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."));
+      .orElseThrow(() ->  new RestApiException(CommonErrorCode.NOT_FOUND, "거래를 찾을 수 없습니다."));
 
     Contract contract = transaction.getContract();
 
