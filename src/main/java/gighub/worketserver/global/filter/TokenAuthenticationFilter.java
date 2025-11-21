@@ -31,6 +31,15 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
   private final CookieUtil cookieUtil;
 
   @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    String uri = request.getRequestURI();
+    return uri.startsWith("/test")
+      || uri.startsWith("/oauth2")
+      || uri.startsWith("/auth")
+      || uri.matches("^/transactions/\\d+/preview$");
+  }
+
+  @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                   FilterChain filterChain) throws ServletException, IOException {
 
@@ -76,10 +85,13 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     } catch (TokenException e) {
       clearCookies(response);
       request.setAttribute("exception", e.getErrorCode());
+      throw new TokenException(e.getErrorCode());
 
     } catch (Exception e) {
       clearCookies(response);
       request.setAttribute("exception", TokenErrorCode.INVALID_TOKEN);
+
+      throw new TokenException(TokenErrorCode.INVALID_TOKEN);
     }
 
     filterChain.doFilter(request, response);

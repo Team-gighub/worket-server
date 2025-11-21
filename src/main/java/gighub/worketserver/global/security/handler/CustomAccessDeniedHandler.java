@@ -22,11 +22,13 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
   public void handle(HttpServletRequest request, HttpServletResponse response,
                      AccessDeniedException accessDeniedException) throws IOException {
 
+    int httpStatus = HttpServletResponse.SC_FORBIDDEN;
+
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
     response.setCharacterEncoding("UTF-8");
-    response.setStatus(HttpServletResponse.SC_FORBIDDEN);  // 403
+    response.setStatus(httpStatus);  // 403
 
-    ApiResponse<Void> errorResponse = ApiResponse.error("접근 권한이 없습니다.");
+    ApiResponse<Void> errorResponse = ApiResponse.error("접근 권한이 없습니다.", "AUTH_1401", httpStatus);
 
     response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
   }
