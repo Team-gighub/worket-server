@@ -82,7 +82,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
   private User getOrSave(OAuth2UserInfo oAuth2UserInfo, String state, String registrationId) {
     return userRepository.findByOauthId(oAuth2UserInfo.oauthId())
       .orElseGet(() -> {
-        Role role = ("CLIENT".equalsIgnoreCase(state))
+
+        // state = "client:tx=1234" 일 때 "client" 부분만 추출
+        String rolePart = null;
+        if (state != null && state.contains(":")) {
+          rolePart = state.split(":")[0];   // "client"
+        }
+
+        Role role = ("CLIENT".equalsIgnoreCase(rolePart))
           ? Role.CLIENT
           : Role.FREELANCER;
 
