@@ -73,4 +73,8 @@ public class Contract {
   public void updateFreelancerSignUrl(String signUrl) {
     this.freelancerSign = signUrl;
   }
+
+  public void updateClientSignUrl(String signUrl) {
+    this.clientSign = signUrl;
+  }
 }

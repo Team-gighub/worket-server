@@ -6,6 +6,7 @@ import gighub.worketserver.domain.Contract;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.ContractType;
+import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
 import gighub.worketserver.global.response.ApiResponse;
@@ -15,6 +16,7 @@ import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -139,20 +142,27 @@ public class ContractService {
   @Transactional
   public void registerSignature(Authentication authentication, Long contractId, SignatureRequest request) {
     Long userId = Long.parseLong(authentication.getName());
+    System.out.println(authentication.getAuthorities());
+    Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+    String authorityString = authorities.iterator().next().getAuthority();
+    Role role = Role.valueOf(authorityString);
     log.info("Registering signature for contract {} by user {}", contractId, userId);
 
     // 서명 저장 로직
     Contract contract = contractRepository.findById(contractId)
       .orElseThrow(() -> new RuntimeException("Contract not found"));
 
-    // TODO: 서명 URL 저장, Transaction 상태 업데이트
-    contract.updateFreelancerSignUrl(request.getSignatureUrl());
-    contractRepository.save(contract);
     Transaction transaction = transactionRepository.findByContract(contract);
-    TransactionStatus status = TransactionStatus.SIGNED;
+    //프리랜서의 경우 저장
+    if (role.equals(Role.FREELANCER)) {
+      contract.updateFreelancerSignUrl(request.getSignatureUrl());
+    }//클라이언트의 경우 저장, 상태 바꾸고
+    else if (role.equals(Role.CLIENT)) {
+      contract.updateClientSignUrl(request.getSignatureUrl());
+      TransactionStatus status = TransactionStatus.SIGNED;
+      transaction.updateStatus(status);
+    }
 
-    transaction.updateStatus(status);
-    transactionRepository.save(transaction);
     log.info("Signature URL: {}", request.getSignatureUrl());
   }
 }
