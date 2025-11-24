@@ -162,7 +162,6 @@ public class ContractService {
     metadata.put("freelancerInfo", request.getFreelancerInfo());
 
     // JSON 변환
-    ObjectMapper objectMapper = new ObjectMapper();
     byte[] metadataJson = objectMapper.writeValueAsBytes(metadata);
 
     // S3 업로드
