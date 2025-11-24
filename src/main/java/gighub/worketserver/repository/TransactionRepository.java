@@ -1,11 +1,13 @@
 package gighub.worketserver.repository;
 
+import gighub.worketserver.domain.Contract;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,4 +80,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Param("freelancerId") Long freelancerId,
     @Param("status") TransactionStatus status
   );
+  Optional<Transaction> findByContract(Contract contract);
+
 }
