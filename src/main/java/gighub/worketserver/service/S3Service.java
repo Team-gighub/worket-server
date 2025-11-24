@@ -36,7 +36,7 @@ public class S3Service {
   private String s3BucketUrl;
   private final ObjectMapper objectMapper;
   private final RestTemplate restTemplate;
-  private SdkDefaultClientBuilder.NonManagedSdkHttpClient sdkHttpClient;
+  private SdkHttpClient sdkHttpClient = ApacheHttpClient.create();
 
   /**
    * 계약서 관련 파일들을 업로드하기 위한 uploadContractFile 함수
@@ -49,7 +49,7 @@ public class S3Service {
   public String uploadContractFile(byte[] content, String fileName, String contentType) throws NoSuchAlgorithmException, IOException {
 
     log.info("upload 함수 호출 시작 -------");
-    SdkHttpClient sdkHttpClient = ApacheHttpClient.create();
+
 
     // MD5 Base64 계산
     MessageDigest md = MessageDigest.getInstance("MD5");
