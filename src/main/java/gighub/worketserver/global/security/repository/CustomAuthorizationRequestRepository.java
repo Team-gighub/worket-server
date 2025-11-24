@@ -17,6 +17,7 @@ public class CustomAuthorizationRequestRepository
   private final CookieUtil cookieUtil;
 
   private static final String STATE_COOKIE = "oauth_state";
+  private static final int STATE_COOKIE_MAX_AGE_SECONDS = 180;
 
   @Override
   public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
@@ -42,7 +43,7 @@ public class CustomAuthorizationRequestRepository
     var cookie = cookieUtil.createTokenCookie(
       STATE_COOKIE,
       state,
-      180 // 3분 유효
+      STATE_COOKIE_MAX_AGE_SECONDS
     );
 
     response.addHeader("Set-Cookie", cookie.toString());
