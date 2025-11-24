@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum PasscodeErrorCode implements ErrorCode {
 
-  INVALID_PASSCODE(HttpStatus.UNAUTHORIZED, "AUTH_3002", "잘못된 패스코드입니다.");
+  INVALID_PASSCODE(HttpStatus.FORBIDDEN, "AUTH_3002", "잘못된 패스코드입니다.");
 
   private final HttpStatus httpStatus;
   private final String customCode;
