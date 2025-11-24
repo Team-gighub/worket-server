@@ -1,7 +1,6 @@
 package gighub.worketserver.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import gighub.worketserver.global.config.RestTemplateConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,14 +47,10 @@ public class S3Service {
    */
   public String uploadContractFile(byte[] content, String fileName, String contentType) throws NoSuchAlgorithmException, IOException {
 
-    log.info("upload 함수 호출 시작 -------");
-
-
     // MD5 Base64 계산
     MessageDigest md = MessageDigest.getInstance("MD5");
     byte[] md5Bytes = md.digest(content);
     String md5Base64 = Base64.getEncoder().encodeToString(md5Bytes);
-    log.info("MD5 Base64: {}", md5Base64);
 
     // Presigned URL 발급 요청
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(s3BucketUrl + "/getTempPresignedUrl")
