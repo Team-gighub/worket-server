@@ -26,6 +26,7 @@ public class PasscodeCheckFilter extends OncePerRequestFilter {
     return uri.startsWith("/test")
       || uri.startsWith("/oauth2")
       || uri.startsWith("/auth")
+      || uri.startsWith("/users/me")
       || uri.matches("^/transactions/\\d+/preview$");
   }
 
