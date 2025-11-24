@@ -7,6 +7,7 @@ import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.global.security.dto.OAuth2UserInfo;
 import gighub.worketserver.global.security.dto.PrincipalDetails;
 import gighub.worketserver.global.security.repository.CustomAuthorizationRequestRepository;
+import gighub.worketserver.global.util.StateParser;
 import gighub.worketserver.repository.OauthTokenRepository;
 import gighub.worketserver.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -83,11 +84,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     return userRepository.findByOauthId(oAuth2UserInfo.oauthId())
       .orElseGet(() -> {
 
-        // state = "client:tx=1234" 일 때 "client" 부분만 추출
-        String rolePart = null;
-        if (state != null && state.contains(":")) {
-          rolePart = state.split(":")[0];   // "client"
-        }
+        var parsed = StateParser.parse(state);
+        String rolePart = parsed.role();
 
         Role role = ("CLIENT".equalsIgnoreCase(rolePart))
           ? Role.CLIENT
