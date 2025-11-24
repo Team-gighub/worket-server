@@ -3,6 +3,8 @@ package gighub.worketserver.global.filter;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.global.exception.PasscodeErrorCode;
 import gighub.worketserver.global.exception.PasscodeException;
+import gighub.worketserver.global.exception.PasscodeForFilterErrorCode;
+import gighub.worketserver.global.exception.PasscodeForFilterException;
 import gighub.worketserver.global.security.dto.PrincipalDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -43,8 +45,8 @@ public class PasscodeCheckFilter extends OncePerRequestFilter {
     User user = details.getUser();
 
     if (user.getPasscode() == null || user.getPasscode().isBlank()) {
-      request.setAttribute("exception", PasscodeErrorCode.PASSCODE_EMPTY);
-      throw new PasscodeException(PasscodeErrorCode.PASSCODE_EMPTY);
+      request.setAttribute("exception", PasscodeForFilterErrorCode.PASSCODE_EMPTY);
+      throw new PasscodeForFilterException(PasscodeForFilterErrorCode.PASSCODE_EMPTY);
     }
 
     filterChain.doFilter(request, response);
