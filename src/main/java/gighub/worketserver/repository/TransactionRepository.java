@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,12 +15,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
    * Transaction ID로 상세 조회 (Contract, Client, Freelancer 포함)
    */
   @Query("""
-        SELECT t FROM Transaction t
-        LEFT JOIN FETCH t.contract c
-        LEFT JOIN FETCH c.client
-        LEFT JOIN FETCH c.freelancer
-        WHERE t.id = :id
-    """)
+    SELECT t FROM Transaction t
+    LEFT JOIN FETCH t.contract c
+    LEFT JOIN FETCH c.client
+    LEFT JOIN FETCH c.freelancer
+    WHERE t.id = :id
+  """)
   Optional<Transaction> findByIdWithContractAndUsers(@Param("id") Long id);
 
   /**
