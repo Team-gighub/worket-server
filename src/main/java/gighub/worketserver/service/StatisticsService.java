@@ -47,7 +47,7 @@ public class StatisticsService {
       .atStartOfDay();
     Sort sort = Sort.by(Sort.Direction.ASC, "settledAt");
     //2. 정산일이 현재기준~3달까지 가져옴
-    List<Transaction> threeMonthTransactions = transactionRepository.findBySettledAtGreaterThanEqual(settledAtStart, sort);
+    List<Transaction> threeMonthTransactions = transactionRepository.findByContract_FreelancerIdAndSettledAtGreaterThanEqual(userId, settledAtStart, sort);
 
     Map<String, List<Transaction>> transactionsByMonth = threeMonthTransactions.stream()
       .collect(Collectors.groupingBy(
@@ -82,9 +82,8 @@ public class StatisticsService {
     LocalDateTime thisYear = startOfYear.atStartOfDay();
     //2. 올해의 거래 내역 가져오기
     List<Transaction> currentYearTransactions =
-      transactionRepository.findBySettledAtGreaterThanEqual(thisYear, sort);
+      transactionRepository.findByContract_FreelancerIdAndSettledAtGreaterThanEqual(userId, settledAtStart, sort);
 
-    System.out.println(currentYearTransactions);
     //3. 올해의 소득액 합산
     BigDecimal totalYearIncome = currentYearTransactions.stream()
       .map(Transaction::getAmount)

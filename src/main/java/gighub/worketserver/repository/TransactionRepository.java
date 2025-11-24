@@ -87,5 +87,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
   Transaction findByContract(Contract contract);
 
-  List<Transaction> findBySettledAtGreaterThanEqual(LocalDateTime settledAtStart, Sort sort);
+  List<Transaction> findByContract_FreelancerIdAndSettledAtGreaterThanEqual(
+    Long freelancerId, // 1. Contract.freelancerId에 들어갈 값
+    LocalDateTime settledAtStart, // 2. settledAt 조건 값
+    Sort sort // 3. 정렬 조건
+  );
 }
