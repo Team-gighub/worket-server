@@ -1,6 +1,7 @@
 package gighub.worketserver.controller;
 
 import gighub.worketserver.dto.PasscodeRegisterRequest;
+import gighub.worketserver.dto.PasscodeVerifyRequest;
 import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.service.PasscodeService;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class AuthController {
 
     @PostMapping("/verify")
     public ApiResponse<?> verify(
-            @RequestBody PasscodeRegisterRequest request,
+            @RequestBody PasscodeVerifyRequest request,
             Authentication authentication
     ) {
         Long userId = Long.parseLong(authentication.getName());
