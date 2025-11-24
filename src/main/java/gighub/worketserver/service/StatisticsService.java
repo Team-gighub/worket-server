@@ -82,7 +82,7 @@ public class StatisticsService {
     LocalDateTime thisYear = startOfYear.atStartOfDay();
     //2. 올해의 거래 내역 가져오기
     List<Transaction> currentYearTransactions =
-      transactionRepository.findByContract_FreelancerIdAndSettledAtGreaterThanEqual(userId, settledAtStart, sort);
+      transactionRepository.findByContract_FreelancerIdAndSettledAtGreaterThanEqual(userId, thisYear, sort);
 
     //3. 올해의 소득액 합산
     BigDecimal totalYearIncome = currentYearTransactions.stream()
@@ -91,11 +91,15 @@ public class StatisticsService {
     //4. 올해의 거래수 계산
     int totalYearTransactions = currentYearTransactions.size();
 
-    List<YearProfitDto> currentYearProfit = new ArrayList<>();
-    currentYearProfit.add(YearProfitDto.builder()
-      .incomes(totalYearIncome)
-      .transactions(totalYearTransactions)
-      .build());
+//    List<YearProfitDto> currentYearProfit = new ArrayList<>();
+//    currentYearProfit.add(YearProfitDto.builder()
+//      .incomes(totalYearIncome)
+//      .transactions(totalYearTransactions)
+//      .build());
+
+    YearProfitDto currentYearProfit = new YearProfitDto();
+    currentYearProfit.setIncomes(totalYearIncome);
+    currentYearProfit.setTransactions(totalYearTransactions);
 
     return StatisticsResponse.builder()
       .currentYearProfit(currentYearProfit)
