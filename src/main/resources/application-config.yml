@@ -30,3 +30,6 @@ gemini:
   secret: ${GEMINI_SECRET}
   model: ${GEMINI_MODEL}
   url: ${GEMINI_URL}
+
+s3:
+  bucket-api-url: ${S3_BUCKET_API_URL}
