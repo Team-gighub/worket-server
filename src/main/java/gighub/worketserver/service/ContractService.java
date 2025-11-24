@@ -223,15 +223,11 @@ public class ContractService {
    * @param pdfBytes
    * @return
    */
-  private String generateHash(byte[] pdfBytes) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      byte[] hashBytes = digest.digest(pdfBytes);
-      StringBuilder sb = new StringBuilder();
-      for (byte b : hashBytes) sb.append(String.format("%02x", b));
-      return sb.toString();
-    } catch (NoSuchAlgorithmException e) {
-      throw new RuntimeException("Hash 생성 실패", e);
-    }
+  private String generateHash(byte[] pdfBytes) throws NoSuchAlgorithmException {
+    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    byte[] hashBytes = digest.digest(pdfBytes);
+    StringBuilder sb = new StringBuilder();
+    for (byte b : hashBytes) sb.append(String.format("%02x", b));
+    return sb.toString();
   }
 }
