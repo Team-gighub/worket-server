@@ -30,3 +30,6 @@ gemini:
   secret: ${GEMINI_SECRET}
   model: ${GEMINI_MODEL}
   url: ${GEMINI_URL}
+
+frontend:
+  base-url: ${FRONTEND_BASE_URL}
