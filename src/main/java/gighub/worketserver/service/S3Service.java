@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -34,6 +35,7 @@ public class S3Service {
   @Value("${s3.bucket-api-url}")
   private String s3BucketUrl;
   private final ObjectMapper objectMapper;
+  private final RestTemplate restTemplate;
   private SdkDefaultClientBuilder.NonManagedSdkHttpClient sdkHttpClient;
 
   /**
@@ -61,10 +63,8 @@ public class S3Service {
       .queryParam("contentType", contentType)
       .queryParam("md5", md5Base64);
 
-    RestTemplateConfig restTemplateConfig = new RestTemplateConfig();
-    ResponseEntity<Map> response = restTemplateConfig.restTemplate()
+    ResponseEntity<Map> response = restTemplate
       .exchange(builder.build(false).toUriString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Map.class);
-
     String presignedUrlString = objectMapper.readTree((String) response.getBody().get("body")).get("url").asText();
 
     // PUT 요청 생성
@@ -122,9 +122,7 @@ public class S3Service {
       .queryParam("bucket", bucketName)
       .queryParam("filename", fileName);
 
-    RestTemplateConfig restTemplateConfig = new RestTemplateConfig();
-    ResponseEntity<Map> response = restTemplateConfig.restTemplate()
-      .exchange(builder.build(false).toUriString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Map.class);
+    ResponseEntity<Map> response = restTemplate.exchange(builder.build(false).toUriString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Map.class);
 
     String presignedUrlString = objectMapper.readTree((String) response.getBody().get("body")).get("url").asText();
     return presignedUrlString;
