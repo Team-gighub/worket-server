@@ -1,4 +1,28 @@
 spring:
+  application:
+    name: worket-server
+
+  config:
+    import: optional:file:.env[.properties]
+
+  profiles:
+    include: config
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/worket?serverTimezone=Asia/Seoul
+    username: root
+    password: 1234
+
+  jpa:
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+    hibernate:
+      ddl-auto: create
+    database-platform: org.hibernate.dialect.MySQLDialect
+
   security:
     oauth2:
       client:
@@ -24,7 +48,6 @@ naver:
   ocr:
     secret: ${OCR_SECRET}
     url: ${OCR_URL}
-
 
 gemini:
   secret: ${GEMINI_SECRET}
