@@ -103,32 +103,25 @@ public class ContractService {
     Contract savedContract = contractRepository.save(contract);
 
     ContractType type = request.getType();
-    Transaction transaction;
+    TransactionStatus status;
 
-    if (type.equals(ContractType.UPLOAD)) {
+    if (type == ContractType.UPLOAD) {
       //업로드는 거래 타입이 SINGED
-      transaction = Transaction.builder()
-        .contract(savedContract) //생성된 계약서 주입
-        .amount(request.getContractInfo().getAmount())
-        .freelancerBank(request.getFreelancerInfo().getBank())
-        .freelancerAccount(request.getFreelancerInfo().getAccount())
-        .status(TransactionStatus.SIGNED)
-        .createdAt(LocalDateTime.now())
-        .build();
-    } else if (type.equals(ContractType.CREATED)) {
+      status = TransactionStatus.SIGNED;
+    } else if (type == ContractType.CREATED) {
       //생성은 거래 타입이 CREATED
-      transaction = Transaction.builder()
-        .contract(savedContract) //생성된 계약서 주입
-        .amount(request.getContractInfo().getAmount())
-        .freelancerBank(request.getFreelancerInfo().getBank())
-        .freelancerAccount(request.getFreelancerInfo().getAccount())
-        .status(TransactionStatus.CREATED)
-        .createdAt(LocalDateTime.now())
-        .build();
+      status = TransactionStatus.CREATED;
     } else {
       throw new RestApiException(CommonErrorCode.BAD_REQUEST, "계약서형태가 올바르지 않습니다.");
-
     }
+    Transaction transaction = Transaction.builder()
+      .contract(savedContract) //생성된 계약서 주입
+      .amount(request.getContractInfo().getAmount())
+      .freelancerBank(request.getFreelancerInfo().getBank())
+      .freelancerAccount(request.getFreelancerInfo().getAccount())
+      .status(status)
+      .build();
+
     // Transaction 저장
     Transaction savedTransaction = transactionRepository.save(transaction);
 
