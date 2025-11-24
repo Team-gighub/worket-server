@@ -7,6 +7,7 @@ import gighub.worketserver.global.util.StateParser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -22,8 +23,8 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
   private final CookieUtil cookieUtil;
   private final CustomAuthorizationRequestRepository customAuthorizationRequestRepository;
 
-  // Redirect URL 상수
-  private static final String BASE_FRONT_URL = "http://localhost:3000";
+  @Value("${frontend.base-url}")
+  private String baseFrontUrl;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -38,12 +39,12 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     String role = parsed.role();
     String transactionId = parsed.transactionId();
 
-    String redirectUrl = BASE_FRONT_URL;
+    String redirectUrl = baseFrontUrl;
 
     if ("client".equalsIgnoreCase(role) && transactionId != null) {
-      redirectUrl = BASE_FRONT_URL + "/trade/" + transactionId;
+      redirectUrl = baseFrontUrl + "/trade/" + transactionId;
     } else if ("freelancer".equalsIgnoreCase(role)) {
-      redirectUrl = BASE_FRONT_URL;
+      redirectUrl = baseFrontUrl;
     }
 
     // 로그인 성공 시 JWT 발급
