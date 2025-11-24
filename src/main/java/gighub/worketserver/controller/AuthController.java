@@ -1,9 +1,9 @@
 package gighub.worketserver.controller;
 
-import gighub.worketserver.dto.PasscodeRegisterRequest;
-import gighub.worketserver.dto.PasscodeVerifyRequest;
+import gighub.worketserver.dto.PasscodeDto;
 import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.service.PasscodeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +20,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ApiResponse<?> register(
-            @RequestBody PasscodeRegisterRequest request,
+            @Valid @RequestBody PasscodeDto request,
             Authentication authentication
     ) {
         Long userId = Long.parseLong(authentication.getName());
@@ -33,7 +33,7 @@ public class AuthController {
 
     @PostMapping("/verify")
     public ApiResponse<?> verify(
-            @RequestBody PasscodeVerifyRequest request,
+            @Valid @RequestBody PasscodeDto request,
             Authentication authentication
     ) {
         Long userId = Long.parseLong(authentication.getName());
