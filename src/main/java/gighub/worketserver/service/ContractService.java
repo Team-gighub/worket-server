@@ -6,23 +6,31 @@ import gighub.worketserver.domain.Contract;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.ContractType;
+import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.*;
+import gighub.worketserver.global.exception.CommonErrorCode;
+import gighub.worketserver.global.exception.RestApiException;
 import gighub.worketserver.global.response.ApiResponse;
+import gighub.worketserver.global.security.dto.PrincipalDetails;
 import gighub.worketserver.repository.ContractRepository;
 import gighub.worketserver.repository.TransactionRepository;
 import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Type;
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 계약서 관련 비즈니스 로직 Service
@@ -77,8 +85,7 @@ public class ContractService {
 
     // User 조회
     User freelancer = userRepository.findById(userId)
-      .orElseThrow(() -> new RuntimeException("User not found"));
-
+      .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "유저 정보가 존재하지 않습니다."));
 
     // Contract 생성
     Contract contract = Contract.builder()
@@ -96,36 +103,27 @@ public class ContractService {
     Contract savedContract = contractRepository.save(contract);
 
     ContractType type = request.getType();
-    Transaction transaction;
+    TransactionStatus status;
 
-    if (type.equals(ContractType.UPLOAD)) {
+    if (type == ContractType.UPLOAD) {
       //업로드는 거래 타입이 SINGED
-      transaction = Transaction.builder()
-        .contract(savedContract) //생성된 계약서 주입
-        .amount(request.getContractInfo().getAmount())
-        .freelancerBank(request.getFreelancerInfo().getBank())
-        .freelancerAccount(request.getFreelancerInfo().getAccount())
-        .status(TransactionStatus.SIGNED)
-        .createdAt(LocalDateTime.now())
-        .build();
-    } else if (type.equals(ContractType.CREATED)) {
+      status = TransactionStatus.SIGNED;
+    } else if (type == ContractType.CREATED) {
       //생성은 거래 타입이 CREATED
-      transaction = Transaction.builder()
-        .contract(savedContract) //생성된 계약서 주입
-        .amount(request.getContractInfo().getAmount())
-        .freelancerBank(request.getFreelancerInfo().getBank())
-        .freelancerAccount(request.getFreelancerInfo().getAccount())
-        .status(TransactionStatus.CREATED)
-        .createdAt(LocalDateTime.now())
-        .build();
+      status = TransactionStatus.CREATED;
     } else {
-      throw new IllegalArgumentException("지원되지 않는 계약 타입입니다: " + type);
+      throw new RestApiException(CommonErrorCode.BAD_REQUEST, "계약서형태가 올바르지 않습니다.");
     }
-
+    Transaction transaction = Transaction.builder()
+      .contract(savedContract) //생성된 계약서 주입
+      .amount(request.getContractInfo().getAmount())
+      .freelancerBank(request.getFreelancerInfo().getBank())
+      .freelancerAccount(request.getFreelancerInfo().getAccount())
+      .status(status)
+      .build();
 
     // Transaction 저장
     Transaction savedTransaction = transactionRepository.save(transaction);
-    //System.out.println(savedTransaction.getId());
 
     return ContractCreateResponse.builder()
       .transactionId(savedTransaction.getId()) //거래 ID
@@ -139,20 +137,28 @@ public class ContractService {
   @Transactional
   public void registerSignature(Authentication authentication, Long contractId, SignatureRequest request) {
     Long userId = Long.parseLong(authentication.getName());
+    PrincipalDetails principal = (PrincipalDetails) authentication.getPrincipal();
+    Role role = principal.getUser().getRole();
     log.info("Registering signature for contract {} by user {}", contractId, userId);
 
     // 서명 저장 로직
     Contract contract = contractRepository.findById(contractId)
-      .orElseThrow(() -> new RuntimeException("Contract not found"));
+      .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "계약 정보가 존재하지 않습니다."));
 
-    // TODO: 서명 URL 저장, Transaction 상태 업데이트
-    contract.updateFreelancerSignUrl(request.getSignatureUrl());
-    contractRepository.save(contract);
-    Transaction transaction = transactionRepository.findByContract(contract);
-    TransactionStatus status = TransactionStatus.SIGNED;
+    Transaction transaction = transactionRepository.findByContract(contract)
+      .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "계약 정보가 존재하지 않습니다."));
 
-    transaction.updateStatus(status);
-    transactionRepository.save(transaction);
+    //프리랜서의 경우 저장
+    if (role.equals(Role.FREELANCER)) {
+      contract.updateFreelancerSignUrl(request.getSignatureUrl());
+    }//클라이언트의 경우 저장, 상태 바꾸고
+    else if (role.equals(Role.CLIENT)) {
+      contract.updateClientSignUrl(request.getSignatureUrl());
+      TransactionStatus status = TransactionStatus.SIGNED;
+      transaction.updateStatus(status);
+    }
+
+
     log.info("Signature URL: {}", request.getSignatureUrl());
   }
 }

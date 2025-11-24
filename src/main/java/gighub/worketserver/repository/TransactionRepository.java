@@ -15,18 +15,16 @@ import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-//  List<Transaction> findByFreelancerId(Long freelancerId);
-
   /**
    * Transaction ID로 상세 조회 (Contract, Client, Freelancer 포함)
    */
   @Query("""
-      SELECT t FROM Transaction t
-      LEFT JOIN FETCH t.contract c
-      LEFT JOIN FETCH c.client
-      LEFT JOIN FETCH c.freelancer
-      WHERE t.id = :id
-    """)
+    SELECT t FROM Transaction t
+    LEFT JOIN FETCH t.contract c
+    LEFT JOIN FETCH c.client
+    LEFT JOIN FETCH c.freelancer
+    WHERE t.id = :id
+  """)
   Optional<Transaction> findByIdWithContractAndUsers(@Param("id") Long id);
 
   /**
@@ -34,9 +32,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
    * /transactions/{transactionId} API용
    */
   @Query("""
-      SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END
-      FROM Transaction t WHERE t.id = :transactionId
-    """)
+    SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END
+    FROM Transaction t WHERE t.id = :transactionId
+  """)
   boolean existsByTransactionId(@Param("transactionId") Long transactionId);
 
   /**
@@ -44,12 +42,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
    * 프리랜서 또는 의뢰인인 경우 true 반환
    */
   @Query("""
-      SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END
-      FROM Transaction t
-      JOIN t.contract c
-      WHERE t.id = :transactionId
-      AND (c.freelancer.id = :userId OR c.client.id = :userId)
-    """)
+    SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END
+    FROM Transaction t
+    JOIN t.contract c
+    WHERE t.id = :transactionId
+    AND (c.freelancer.id = :userId OR c.client.id = :userId)
+  """)
   boolean hasPermission(
     @Param("transactionId") Long transactionId,
     @Param("userId") Long userId
@@ -59,12 +57,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
    * 프리랜서의 년/월별 거래 목록 조회
    */
   @Query("""
-      SELECT t FROM Transaction t
-      JOIN FETCH t.contract c
-      WHERE c.freelancer.id = :freelancerId
-      AND YEAR(t.createdAt) = :year
-      AND MONTH(t.createdAt) = :month
-    """)
+    SELECT t FROM Transaction t
+    JOIN FETCH t.contract c
+    WHERE c.freelancer.id = :freelancerId
+    AND YEAR(t.createdAt) = :year
+    AND MONTH(t.createdAt) = :month
+  """)
   List<Transaction> findByFreelancerIdAndYearMonth(
     @Param("freelancerId") Long freelancerId,
     @Param("year") int year,
@@ -75,17 +73,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
    * 프리랜서의 특정 상태 거래 건수 조회
    */
   @Query("""
-      SELECT COUNT(t) FROM Transaction t
-      JOIN t.contract c
-      WHERE c.freelancer.id = :freelancerId
-      AND t.status = :status
-    """)
+    SELECT COUNT(t) FROM Transaction t
+    JOIN t.contract c
+    WHERE c.freelancer.id = :freelancerId
+    AND t.status = :status
+  """)
   Long countByFreelancerIdAndStatus(
     @Param("freelancerId") Long freelancerId,
     @Param("status") TransactionStatus status
   );
-
-  Transaction findByContract(Contract contract);
+  Optional<Transaction> findByContract(Contract contract);
 
   List<Transaction> findByContract_FreelancerIdAndSettledAtGreaterThanEqual(
     Long freelancerId, // 1. Contract.freelancerId에 들어갈 값

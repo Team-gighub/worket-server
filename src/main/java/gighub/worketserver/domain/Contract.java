@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "contract")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -72,5 +71,9 @@ public class Contract {
 
   public void updateFreelancerSignUrl(String signUrl) {
     this.freelancerSign = signUrl;
+  }
+
+  public void updateClientSignUrl(String signUrl) {
+    this.clientSign = signUrl;
   }
 }
