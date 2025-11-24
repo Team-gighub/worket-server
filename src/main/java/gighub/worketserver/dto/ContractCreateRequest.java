@@ -9,8 +9,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ContractCreateRequest {
-  private ContractType type;
-  private ContractInfoDto contractInfo;
-  private ClientInfoDto clientInfo;
-  private FreelancerInfoDto freelancerInfo;
+    private ContractType type;
+    private ContractInfoDto contractInfo;
+    private ClientInfoDto clientInfo;
+    private FreelancerInfoDto freelancerInfo;
+    private byte[] pdfFile;
 }

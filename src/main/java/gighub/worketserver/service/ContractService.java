@@ -3,6 +3,7 @@ package gighub.worketserver.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gighub.worketserver.domain.Contract;
+import gighub.worketserver.domain.ContractFile;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.ContractType;
@@ -13,6 +14,7 @@ import gighub.worketserver.global.exception.CommonErrorCode;
 import gighub.worketserver.global.exception.RestApiException;
 import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.global.security.dto.PrincipalDetails;
+import gighub.worketserver.repository.ContractFileRepository;
 import gighub.worketserver.repository.ContractRepository;
 import gighub.worketserver.repository.TransactionRepository;
 import gighub.worketserver.repository.UserRepository;
@@ -24,11 +26,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -47,6 +54,8 @@ public class ContractService {
   private final OcrService ocrService;
   private final GeminiService geminiService;
   private final ObjectMapper objectMapper;
+  private final S3Service s3Service;
+  private final ContractFileRepository contractFileRepository;
 
 
   /**
@@ -67,6 +76,9 @@ public class ContractService {
         }
       );
 
+      // 4. 계약서 pdf 파일을 세션에 저장
+      result.put("pdfFile", file.getBytes());
+
       return ApiResponse.ok(result);
 
     } catch (Exception e) {
@@ -79,7 +91,7 @@ public class ContractService {
    * 계약서 등록
    */
   @Transactional
-  public ContractCreateResponse createContract(Authentication authentication, ContractCreateRequest request) {
+  public ContractCreateResponse createContract(Authentication authentication, ContractCreateRequest request) throws NoSuchAlgorithmException, IOException {
     Long userId = Long.parseLong(authentication.getName());
     log.info("Creating contract for user {}: {}", userId, request.getContractInfo().getTitle());
 
@@ -125,6 +137,50 @@ public class ContractService {
     // Transaction 저장
     Transaction savedTransaction = transactionRepository.save(transaction);
 
+    // S3 업로드
+    byte[] toUploadFile = request.getPdfFile();
+
+    // 1. 계약서 파일 업로드
+    String uploadedContractFile = s3Service.uploadContractFile(
+      toUploadFile,
+      savedContract.getId() + "/contract.pdf",
+      "application/pdf"
+    );
+
+    // 2. 해시 파일 업로드
+    String hashValue = generateHash(toUploadFile);
+    s3Service.uploadContractFile(
+      hashValue.getBytes(StandardCharsets.UTF_8),
+      savedContract.getId() + "/hash.txt",
+      "text/plain"
+    );
+
+    // 3. TODO: contract 메타 데이터 업로드 (메타 데이터 형식 최종 형식으로 변경 필요)
+    Map<String, Object> metadata = new HashMap<>();
+    metadata.put("contractInfo", request.getContractInfo());
+    metadata.put("clientInfo", request.getClientInfo());
+    metadata.put("freelancerInfo", request.getFreelancerInfo());
+
+    // JSON 변환
+    ObjectMapper objectMapper = new ObjectMapper();
+    byte[] metadataJson = objectMapper.writeValueAsBytes(metadata);
+
+    // S3 업로드
+    s3Service.uploadContractFile(
+      metadataJson,
+      savedContract.getId() + "/metadata.json",
+      "application/json"
+    );
+
+    // contract_file 테이블 저장
+    ContractFile contractFile = ContractFile.builder()
+      .contract(savedContract)
+      .fileUrl(uploadedContractFile)
+      .fileHash(hashValue)
+      .build();
+
+    contractFileRepository.save(contractFile);
+
     return ContractCreateResponse.builder()
       .transactionId(savedTransaction.getId()) //거래 ID
       .contractId(savedContract.getId()) // 계약 ID
@@ -160,5 +216,23 @@ public class ContractService {
 
 
     log.info("Signature URL: {}", request.getSignatureUrl());
+  }
+
+  /**
+   * PDF 파일 HASH 값으로 변환
+   *
+   * @param pdfBytes
+   * @return
+   */
+  private String generateHash(byte[] pdfBytes) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hashBytes = digest.digest(pdfBytes);
+      StringBuilder sb = new StringBuilder();
+      for (byte b : hashBytes) sb.append(String.format("%02x", b));
+      return sb.toString();
+    } catch (NoSuchAlgorithmException e) {
+      throw new RuntimeException("Hash 생성 실패", e);
+    }
   }
 }
