@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -20,6 +21,11 @@ public class PdfGenerationService {
 
   // 한국어 폰트 경로
   private static final String KOR_FONT_PATH = "/fonts/NanumGothic.ttf";
+  private final S3Service s3Service;
+
+  public PdfGenerationService(S3Service s3Service) {
+    this.s3Service = s3Service;
+  }
 
   /**
    * Contract Entity 기반 PDF 생성
@@ -143,7 +149,8 @@ public class PdfGenerationService {
       clientSign.addElement(clientRoleLabel);
 
       // 실제 서명 이미지 추가
-      Image clientSignatureImage = Image.getInstance(contract.getClientSign());
+      String CLSignaturePresignedUrl = s3Service.getPresignedUrl("s3-worket-bucket",contract.getClientSign());
+      Image clientSignatureImage = Image.getInstance(CLSignaturePresignedUrl);
       clientSignatureImage.scaleToFit(200, 100);
       clientSignatureImage.setAlignment(Image.ALIGN_LEFT);
       clientSign.addElement(clientSignatureImage);
@@ -165,7 +172,8 @@ public class PdfGenerationService {
       freelancerSign.addElement(freelancerRoleLabel);
 
       // 실제 서명 이미지 추가
-      Image freelancerSignatureImage = Image.getInstance(contract.getFreelancerSign());
+      String frSignaturePresignedUrl = s3Service.getPresignedUrl("s3-worket-bucket",contract.getFreelancerSign());
+      Image freelancerSignatureImage = Image.getInstance(frSignaturePresignedUrl);
       freelancerSignatureImage.scaleToFit(200, 100);
       freelancerSignatureImage.setAlignment(Image.ALIGN_RIGHT);
       freelancerSign.addElement(freelancerSignatureImage);
@@ -182,6 +190,8 @@ public class PdfGenerationService {
 
       document.close();
       return baos.toByteArray();
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
     } finally {
       if (document.isOpen()) {
         document.close();
