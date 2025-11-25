@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -31,10 +32,10 @@ import software.amazon.awssdk.utils.IoUtils;
 @RequiredArgsConstructor
 public class S3Service {
 
-  @Value("${s3.bucket-api-url}")
-  private String s3BucketUrl;
   private final ObjectMapper objectMapper;
   private final RestTemplate restTemplate;
+  @Value("${s3.bucket-api-url}")
+  private String s3BucketUrl;
   private SdkHttpClient sdkHttpClient = ApacheHttpClient.create();
 
   /**
@@ -106,12 +107,17 @@ public class S3Service {
    * 파일 조회/다운로드를 위한 getPresignedUrl 함수
    *
    * @param bucketName S3에 존재하는 버킷의 이름을 전달합니다.( s3-worket-bucket: 서명 파일, 계약서 임시 저장 폴더 존재, worket-contract-immutable: 계약서 최종 저장 버킷)
-   * @param fileName   contractID를 포함하는 경로와 함께 서명 파일명을 인자로 전달합니다.
-   *                   예시: {directoryName}/{contractId}/{signer}_signature_{timestamp}.png
-   *                   1) contracts-temp: 계약서 관련 파일들이 업로드되는 디렉토리
-   *                   2) signatures: 서명 파일들이 업로드되는 디렉토리
+   * @param url   저장된 url
    */
-  public String getPresignedUrl(String bucketName, String fileName) throws JsonProcessingException {
+  public String getPresignedUrl(String bucketName, String url) throws JsonProcessingException, URISyntaxException {
+    URI uri = new URI(url);
+    String fileName = uri.getPath();
+
+    // 맨 앞의 슬래시 제거
+    if (fileName.startsWith("/")) {
+      fileName = fileName.substring(1);
+    }
+
     // Presigned URL 발급 요청
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(s3BucketUrl + "/getDownloadPresignedUrl")
       .queryParam("bucket", bucketName)
