@@ -3,7 +3,9 @@ package gighub.worketserver.global.exception;
 import gighub.worketserver.global.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -82,4 +84,26 @@ public class GlobalExceptionHandler {
       .status(httpStatus)
       .body(ApiResponse.error(errorCode.getMessage(), errorCode.getCustomCode(), httpStatus));
   }
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  protected ResponseEntity<ApiResponse<?>> handleValidationException(MethodArgumentNotValidException ex) {
+
+    String errorMessage = "잘못된 요청입니다.";
+
+    if (ex.getBindingResult().getFieldError() != null) {
+      FieldError fieldError = ex.getBindingResult().getFieldError();
+      errorMessage = fieldError.getDefaultMessage();
+    }
+
+    ErrorCode errorCode = CommonErrorCode.BAD_REQUEST;
+    int httpStatus = errorCode.getHttpStatus().value();
+
+    return ResponseEntity
+      .status(httpStatus)
+      .body(ApiResponse.error(errorMessage, errorCode.getCustomCode(), httpStatus));
+  }
 }
+
+
+
+

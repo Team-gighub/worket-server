@@ -11,6 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class StatisticsResponse {
-  private List<YearProfitDto> currentYearProfit;
+  private YearProfitDto currentYearProfit;
   private List<MonthlyStatisticsDto> statistics;
 }
