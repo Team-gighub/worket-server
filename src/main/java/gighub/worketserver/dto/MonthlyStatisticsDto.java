@@ -11,6 +11,11 @@ import java.math.BigDecimal;
 @Builder
 public class MonthlyStatisticsDto {
   private String month;
+
+  public String getMonth() {
+    return month;
+  }
+
   private BigDecimal incomes;
   private Integer transactions;
 }
