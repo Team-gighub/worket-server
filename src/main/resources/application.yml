@@ -2,25 +2,19 @@ spring:
   application:
     name: worket-server
 
-  config:
-    import: optional:file:.env[.properties]
-
-  profiles:
-    include: config
-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/worket?serverTimezone=Asia/Seoul
-    username: root
-    password: 1234
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
+    show_sql: true
     properties:
       hibernate:
-        show_sql: true
         format_sql: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: ${DDL_AUTO}
     database-platform: org.hibernate.dialect.MySQLDialect
 
   security:
@@ -30,7 +24,7 @@ spring:
           kakao:
             client-id: ${KAKAO_CLIENT}
             client-secret: ${KAKAO_SECRET}
-            redirect-uri: http://localhost:8080/login/oauth2/code/kakao
+            redirect-uri: ${KAKAO_REDIRECT_URI}
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
             scope: # kakao 개인 정보 동의 항목 설정의 ID 값
