@@ -49,19 +49,14 @@ public class PasscodeCheckFilter extends OncePerRequestFilter {
 
     if (user.getPasscode() == null || user.getPasscode().isBlank()) {
 
-      // 역할별 예외 코드 분기
-      if (role == Role.FREELANCER) {
-        request.setAttribute("exception", PasscodeForFilterErrorCode.PASSCODE_EMPTY_FREELANCER);
-        throw new PasscodeForFilterException(PasscodeForFilterErrorCode.PASSCODE_EMPTY_FREELANCER);
-      }
+      PasscodeForFilterErrorCode errorCode = switch (role) {
+        case FREELANCER -> PasscodeForFilterErrorCode.PASSCODE_EMPTY_FREELANCER;
+        case CLIENT -> PasscodeForFilterErrorCode.PASSCODE_EMPTY_CLIENT;
+        default -> PasscodeForFilterErrorCode.PASSCODE_EMPTY;
+      };
+      request.setAttribute("exception", errorCode);
+      throw new PasscodeForFilterException(errorCode);
 
-      if (role == Role.CLIENT) {
-        request.setAttribute("exception", PasscodeForFilterErrorCode.PASSCODE_EMPTY_CLIENT);
-        throw new PasscodeForFilterException(PasscodeForFilterErrorCode.PASSCODE_EMPTY_CLIENT);
-      }
-
-      request.setAttribute("exception", PasscodeForFilterErrorCode.PASSCODE_EMPTY);
-      throw new PasscodeForFilterException(PasscodeForFilterErrorCode.PASSCODE_EMPTY);
     }
 
     filterChain.doFilter(request, response);
