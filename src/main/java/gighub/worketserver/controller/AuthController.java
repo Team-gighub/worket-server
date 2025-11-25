@@ -1,50 +1,45 @@
 package gighub.worketserver.controller;
 
-import gighub.worketserver.dto.PasscodeRegisterRequest;
-import gighub.worketserver.dto.PasscodeVerifyRequest;
+import gighub.worketserver.dto.PasscodeDto;
 import gighub.worketserver.global.response.ApiResponse;
-import gighub.worketserver.service.AuthService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import gighub.worketserver.service.PasscodeService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 인증 관련 API Controller
- */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/auth")
+@RequestMapping("/auth/passcode")
 public class AuthController {
 
-  private final AuthService authService;
+    private final PasscodeService passcodeService;
 
-  /**
-   * 간편 비밀번호 등록
-   * POST /auth/passcode/register
-   */
-  @PostMapping("/passcode/register")
-  @ResponseStatus(HttpStatus.CREATED)
-  public ApiResponse<Void> registerPasscode(
-    Authentication authentication,
-    @RequestBody PasscodeRegisterRequest request
-  ) {
-    authService.registerPasscode(authentication, request);
-    return ApiResponse.ok(null);
-  }
+    @PostMapping("/register")
+    public ApiResponse<?> register(
+            @Valid @RequestBody PasscodeDto request,
+            Authentication authentication
+    ) {
+        Long userId = Long.parseLong(authentication.getName());
+        String passcode = request.getPasscode();
 
-  /**
-   * 간편 비밀번호 검증
-   * POST /auth/passcode/verify
-   */
-  @PostMapping("/passcode/verify")
-  public ApiResponse<Void> verifyPasscode(
-    Authentication authentication,
-    @RequestBody PasscodeVerifyRequest request
-  ) {
-    authService.verifyPasscode(authentication, request);
-    return ApiResponse.ok(null);
-  }
+        passcodeService.registerPasscode(userId, passcode);
+
+        return ApiResponse.ok("패스코드 등록 완료");
+    }
+
+    @PostMapping("/verify")
+    public ApiResponse<?> verify(
+            @Valid @RequestBody PasscodeDto request,
+            Authentication authentication
+    ) {
+        Long userId = Long.parseLong(authentication.getName());
+
+        passcodeService.verifyPasscode(userId, request.getPasscode());
+
+        return ApiResponse.ok("패스코드 인증 성공");
+    }
 }
