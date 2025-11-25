@@ -15,7 +15,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -111,11 +114,13 @@ public class S3Service {
    *                   1) contracts-temp: 계약서 관련 파일들이 업로드되는 디렉토리
    *                   2) signatures: 서명 파일들이 업로드되는 디렉토리
    */
-  public String getPresignedUrl(String bucketName, String fileName) throws JsonProcessingException {
+  public String getPresignedUrl(String bucketName, String fileName) throws JsonProcessingException, UnsupportedEncodingException {
+    String decoedFilename = URLDecoder.decode(fileName, StandardCharsets.UTF_8.toString());
+
     // Presigned URL 발급 요청
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(s3BucketUrl + "/getDownloadPresignedUrl")
       .queryParam("bucket", bucketName)
-      .queryParam("filename", fileName);
+      .queryParam("filename", decoedFilename);
 
     ResponseEntity<Map> response = restTemplate.exchange(builder.build(false).toUriString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Map.class);
 
