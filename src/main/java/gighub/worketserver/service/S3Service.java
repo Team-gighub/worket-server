@@ -1,6 +1,7 @@
 package gighub.worketserver.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -150,6 +151,41 @@ public class S3Service {
     }
 
     return urlWithoutQuery.substring(0, lastSlashIndex + 1);
+  }
+
+  /**
+   * 정산 완료 후, 최종적으로 컴플라이언스 모드로 업로드 요청하는 함수
+   *
+   * @param folderName 업로드되어야 하는 contractId (폴더명)
+   * @throws JsonProcessingException
+   * @throws UnsupportedEncodingException
+   */
+  public void finalizeContractUpload(String folderName) throws JsonProcessingException, UnsupportedEncodingException {
+    String decodedFolderName = URLDecoder.decode(folderName, StandardCharsets.UTF_8.toString());
+
+    // Presigned URL 발급 요청
+    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(s3BucketUrl + "/finalizeContractUpload ")
+      .queryParam("filename", decodedFolderName);
+
+    // POST 요청 & 응답
+    ResponseEntity<Map> response = restTemplate.exchange(builder.build(false).toUriString(), HttpMethod.POST, new HttpEntity<>(new HttpHeaders()), Map.class);
+    int statusCode = (int) response.getBody().get("statusCode");
+    String bodyString = (String) response.getBody().get("body");
+    JsonNode json = objectMapper.readTree(bodyString);
+
+    // 로그 (성공/실패)
+    if (statusCode == 200) {
+      log.info("FinalizeUpload SUCCESS: message={}, folder={}, fileCount={}",
+        json.get("message").asText(),
+        json.path("folder").asText(null),
+        json.path("fileCount").asInt(0)
+      );
+    } else {
+      log.warn("FinalizeUpload FAILED: statusCode={}, message={}",
+        statusCode,
+        json.get("message").asText()
+      );
+    }
   }
 
 
