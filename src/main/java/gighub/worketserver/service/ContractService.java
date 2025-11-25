@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -140,31 +141,38 @@ public class ContractService {
     // S3 업로드
     byte[] toUploadFile = request.getPdfFile();
 
-    // 1. 계약서 파일 업로드
+    // 1. 메타데이터 준비
+    Map<String, Object> metadata = new HashMap<>();
+    metadata.put("contractInfo", request.getContractInfo());
+    metadata.put("clientInfo", request.getClientInfo());
+    metadata.put("freelancerInfo", request.getFreelancerInfo());
+    byte[] metadataJson = objectMapper.writeValueAsBytes(metadata);
+
+    // 2. PDF + 메타데이터 합치기
+    ByteArrayOutputStream combinedStream = new ByteArrayOutputStream();
+    combinedStream.write(toUploadFile);
+    combinedStream.write(metadataJson);
+    byte[] combinedBytes = combinedStream.toByteArray();
+
+    // 3. 해시 생성 (PDF + 메타데이터 기반)
+    String hashValue = generateHash(combinedBytes);
+
+    // 4. S3 업로드
+    // 4-1. PDF 업로드
     String uploadedContractFile = s3Service.uploadContractFile(
       toUploadFile,
       savedContract.getId() + "/contract.pdf",
       "application/pdf"
     );
 
-    // 2. 해시 파일 업로드
-    String hashValue = generateHash(toUploadFile);
+    // 4-2. 해시 업로드
     s3Service.uploadContractFile(
       hashValue.getBytes(StandardCharsets.UTF_8),
       savedContract.getId() + "/hash.txt",
       "text/plain"
     );
 
-    // 3. TODO: contract 메타 데이터 업로드 (메타 데이터 형식 최종 형식으로 변경 필요)
-    Map<String, Object> metadata = new HashMap<>();
-    metadata.put("contractInfo", request.getContractInfo());
-    metadata.put("clientInfo", request.getClientInfo());
-    metadata.put("freelancerInfo", request.getFreelancerInfo());
-
-    // JSON 변환
-    byte[] metadataJson = objectMapper.writeValueAsBytes(metadata);
-
-    // S3 업로드
+    // 4-3. 메타데이터 업로드
     s3Service.uploadContractFile(
       metadataJson,
       savedContract.getId() + "/metadata.json",
@@ -174,7 +182,7 @@ public class ContractService {
     // contract_file 테이블 저장
     ContractFile contractFile = ContractFile.builder()
       .contract(savedContract)
-      .fileUrl(uploadedContractFile)
+      .fileUrl(s3Service.extractContractPath(uploadedContractFile)) // pdf, json, txt가 담긴 폴더 url로 전달
       .fileHash(hashValue)
       .build();
 

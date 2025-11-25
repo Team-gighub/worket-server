@@ -123,4 +123,29 @@ public class S3Service {
     return presignedUrlString;
   }
 
+  /**
+   * 전체 URL에서 {contractId}까지만 반환
+   * <p>
+   * 예시:
+   * input: https://bucket.s3.amazonaws.com/12345/file.pdf
+   * output: https://bucket.s3.amazonaws.com/12345/
+   */
+  public String extractContractPath(String fullUrl) {
+    if (fullUrl == null || fullUrl.isEmpty()) {
+      return "";
+    }
+
+    // 쿼리스트링 제거
+    String urlWithoutQuery = fullUrl.split("\\?")[0];
+
+    // 마지막 '/' 기준으로 잘라서 contractId까지만 반환
+    int lastSlashIndex = urlWithoutQuery.lastIndexOf('/');
+    if (lastSlashIndex == -1) {
+      return urlWithoutQuery; // 슬래시 없으면 전체 반환
+    }
+
+    return urlWithoutQuery.substring(0, lastSlashIndex + 1);
+  }
+
+
 }
