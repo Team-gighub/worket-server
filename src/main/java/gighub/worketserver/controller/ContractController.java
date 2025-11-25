@@ -15,6 +15,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+
 /**
  * 계약서 관련 API Controller
  */
@@ -29,7 +32,7 @@ public class ContractController {
   public ApiResponse<?> createContract(
     Authentication authentication,
     @RequestBody ContractCreateRequest request
-  ) {
+  ) throws NoSuchAlgorithmException, IOException {
     ContractCreateResponse response = contractService.createContract(authentication, request);
     return ApiResponse.ok(response);
   }
