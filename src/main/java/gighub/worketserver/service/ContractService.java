@@ -96,8 +96,11 @@ public class ContractService {
 
     Contract contract = createAndSaveContract(request, freelancer); // Contract 생성
     Transaction transaction = createAndSaveTransaction(request, contract); // Transaction 생성
-    UploadResultDTO uploadResult = uploadContractFilesToS3(request, contract); // S3 업로드
-    saveContractFileRecord(contract, uploadResult.getUploadedContractFileUrl(), uploadResult.getHash()); // Contract File 저장
+    UploadResultDTO uploadResult = null;
+    if (request.getType() == ContractType.UPLOAD) {
+      uploadResult = uploadContractFilesToS3(request, contract); // S3 업로드
+      saveContractFileRecord(contract, uploadResult.getUploadedContractFileUrl(), uploadResult.getHash()); // contract file table에 저장
+    }
 
     return buildCreateResponse(transaction, contract);
   }
