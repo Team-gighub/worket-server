@@ -26,12 +26,15 @@ public class PasscodeCheckFilter extends OncePerRequestFilter {
   @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String uri = request.getRequestURI();
-    return uri.startsWith("/test")
+    String method = request.getMethod();
+
+    // 1. 기본적으로 필터를 적용하지 않을 경로들
+    if (uri.startsWith("/test")
       || uri.startsWith("/oauth2")
       || uri.startsWith("/auth/passcode")
-      || uri.startsWith("/users/me")
-      || uri.matches("^/transactions/\\d+/preview$");
-  }
+      || uri.matches("^/transactions/\\d+/preview$")) {
+      return true;
+    }
 
     // 2. /users/me 중에서도 POST만 예외 (회원가입 단계라 패스코드 없어야 한다)
     if (uri.equals("/users/me") && method.equals("POST")) {
