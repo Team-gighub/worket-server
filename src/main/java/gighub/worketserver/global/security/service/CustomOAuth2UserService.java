@@ -7,6 +7,7 @@ import gighub.worketserver.domain.constants.Role;
 import gighub.worketserver.global.security.dto.OAuth2UserInfo;
 import gighub.worketserver.global.security.dto.PrincipalDetails;
 import gighub.worketserver.global.security.repository.CustomAuthorizationRequestRepository;
+import gighub.worketserver.global.util.StateParser;
 import gighub.worketserver.repository.OauthTokenRepository;
 import gighub.worketserver.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -82,7 +83,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
   private User getOrSave(OAuth2UserInfo oAuth2UserInfo, String state, String registrationId) {
     return userRepository.findByOauthId(oAuth2UserInfo.oauthId())
       .orElseGet(() -> {
-        Role role = ("CLIENT".equalsIgnoreCase(state))
+
+        var parsed = StateParser.parse(state);
+        String rolePart = parsed.role();
+
+        Role role = ("CLIENT".equalsIgnoreCase(rolePart))
           ? Role.CLIENT
           : Role.FREELANCER;
 

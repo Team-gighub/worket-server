@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "contract")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -27,7 +26,7 @@ public class Contract {
   private User freelancer;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "client_id", nullable = false)
+  @JoinColumn(name = "client_id")
   private User client;
 
   @Enumerated(EnumType.STRING)
@@ -68,5 +67,13 @@ public class Contract {
     if (this.createdAt == null) {
       this.createdAt = LocalDateTime.now();
     }
+  }
+
+  public void updateFreelancerSignUrl(String signUrl) {
+    this.freelancerSign = signUrl;
+  }
+
+  public void updateClientSignUrl(String signUrl) {
+    this.clientSign = signUrl;
   }
 }

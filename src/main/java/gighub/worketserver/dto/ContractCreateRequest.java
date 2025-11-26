@@ -13,4 +13,5 @@ public class ContractCreateRequest {
   private ContractInfoDto contractInfo;
   private ClientInfoDto clientInfo;
   private FreelancerInfoDto freelancerInfo;
+  private byte[] pdfFile;
 }

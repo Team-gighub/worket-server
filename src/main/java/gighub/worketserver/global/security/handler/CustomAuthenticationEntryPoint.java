@@ -33,7 +33,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
       status = token.getHttpStatus().value();
       message = token.getMessage();
       code = token.getCustomCode();
-    } else if (ex instanceof PasscodeErrorCode pass) {
+    } else if (ex instanceof PasscodeForFilterErrorCode pass) {
       status = pass.getHttpStatus().value();
       message = pass.getMessage();
       code = pass.getCustomCode();

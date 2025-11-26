@@ -8,5 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ContractCreateResponse {
+  //거래 ID, 계약 ID 반환
   private Long transactionId;
+  private Long contractId;
 }

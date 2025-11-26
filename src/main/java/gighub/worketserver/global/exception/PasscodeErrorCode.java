@@ -7,10 +7,11 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum PasscodeErrorCode implements ErrorCode {
-  PASSCODE_EMPTY(HttpStatus.FORBIDDEN, "AUTH_2001", "패스코드가 비어 있습니다.");
+
+  INVALID_PASSCODE(HttpStatus.FORBIDDEN, "AUTH_3002", "잘못된 패스코드입니다.");
 
   private final HttpStatus httpStatus;
   private final String customCode;
   private final String message;
-}
 
+}
