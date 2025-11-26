@@ -22,10 +22,10 @@ services:
       - worket-db-data:/var/lib/mysql
 
     healthcheck:
-      test: [ "CMD-SHELL", "mysqladmin ping -uroot -p${DB_PASSWORD} | grep 'mysqld is alive'" ]
-      interval: 5s
+      test: [ "CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent" ]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
 
 volumes:
   worket-db-data:
