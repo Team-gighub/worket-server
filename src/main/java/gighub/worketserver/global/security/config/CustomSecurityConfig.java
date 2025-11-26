@@ -11,6 +11,7 @@ import gighub.worketserver.global.security.handler.OAuth2SuccessHandler;
 import gighub.worketserver.global.security.service.CustomOAuth2UserService;
 import gighub.worketserver.global.security.repository.CustomAuthorizationRequestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.FormHttpMessageConverter;
@@ -52,6 +53,9 @@ public class CustomSecurityConfig {
   private final CustomAccessDeniedHandler customAccessDeniedHandler;
   private final PasscodeCheckFilter passcodeCheckFilter;
   private final ProfileCheckFilter profileCheckFilter;
+
+  @Value("${frontend.base-url}")
+  private String frontendBaseUrl;
 
   @Bean
   public SecurityFilterChain filterChain(
@@ -99,8 +103,9 @@ public class CustomSecurityConfig {
 
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
+
     CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOriginPatterns(List.of("http://localhost:3000"));
+    config.setAllowedOriginPatterns(List.of(frontendBaseUrl));
     config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
     config.setAllowedHeaders(List.of("*"));
     config.setAllowCredentials(true);
