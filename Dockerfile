@@ -9,7 +9,7 @@ COPY build.gradle settings.gradle ./
 COPY gradle gradle
 
 # 의존성 미리 다운로드 (캐시 활용)
-RUN gradle dependencies --no-daemon || true
+RUN gradle dependencies --no-daemon
 
 # 전체 소스 복사
 COPY . .
