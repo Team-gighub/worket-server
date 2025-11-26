@@ -33,6 +33,14 @@ public class PasscodeCheckFilter extends OncePerRequestFilter {
       || uri.matches("^/transactions/\\d+/preview$");
   }
 
+    // 2. /users/me 중에서도 POST만 예외 (회원가입 단계라 패스코드 없어야 한다)
+    if (uri.equals("/users/me") && method.equals("POST")) {
+      return true;  // 필터 스킵
+    }
+
+    // 3. 그 외 GET /users/me 등은 필터 적용
+    return false;
+  }
 
   @Override
   protected void doFilterInternal(HttpServletRequest request,
