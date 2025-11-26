@@ -25,13 +25,24 @@ import java.util.Optional;
 public class ProfileCheckFilter extends OncePerRequestFilter {
   private final FreelancerProfileRepository freelancerProfileRepository;
 
-  @Override
   protected boolean shouldNotFilter(HttpServletRequest request) {
     String uri = request.getRequestURI();
-    return uri.startsWith("/test")
+    String method = request.getMethod();
+
+    // 1. 기본적으로 필터를 적용하지 않을 경로들
+    if (uri.startsWith("/test")
       || uri.startsWith("/oauth2")
-      || uri.startsWith("/auth/passcode")
-      || uri.matches("^/transactions/\\d+/preview$");
+      || uri.matches("^/transactions/\\d+/preview$")) {
+      return true;
+    }
+
+    // 2. /users/me 중에서도 POST만 예외 (회원가입 단계라 패스코드 없어야 한다)
+    if (uri.equals("/users/me") && method.equals("POST")) {
+      return true;  // 필터 스킵
+    }
+
+    // 3. 그 외 GET /users/me 등은 필터 적용
+    return false;
   }
 
   @Override
