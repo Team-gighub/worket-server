@@ -39,11 +39,11 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class TransactionService {
 
+  public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+  public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
   private final TransactionRepository transactionRepository;
   private final UserRepository userRepository;
-
-  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
-  private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
   /**
    * 거래 전체 조회 (월별)
