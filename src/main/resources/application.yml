@@ -50,3 +50,6 @@ gemini:
 
 frontend:
   base-url: ${FRONTEND_BASE_URL}
+
+s3:
+  bucket-api-url: ${S3_BUCKET_API_URL}

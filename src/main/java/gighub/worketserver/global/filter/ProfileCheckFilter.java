@@ -30,8 +30,7 @@ public class ProfileCheckFilter extends OncePerRequestFilter {
     String uri = request.getRequestURI();
     return uri.startsWith("/test")
       || uri.startsWith("/oauth2")
-      || uri.startsWith("/auth")
-      || uri.startsWith("/users/me")
+      || uri.startsWith("/auth/passcode")
       || uri.matches("^/transactions/\\d+/preview$");
   }
 

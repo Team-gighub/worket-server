@@ -3,11 +3,13 @@ package gighub.worketserver.repository;
 import gighub.worketserver.domain.Contract;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.constants.TransactionStatus;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -82,4 +84,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
   );
   Optional<Transaction> findByContract(Contract contract);
 
+  List<Transaction> findByContract_FreelancerIdAndSettledAtGreaterThanEqual(
+    Long freelancerId, // 1. Contract.freelancerId에 들어갈 값
+    LocalDateTime settledAtStart, // 2. settledAt 조건 값
+    Sort sort // 3. 정렬 조건
+  );
 }
