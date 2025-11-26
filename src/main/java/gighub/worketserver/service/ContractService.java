@@ -145,7 +145,7 @@ public class ContractService {
       //2. 계약서 pdf만들기
       byte[] pdfBytes = pdfGenerationService.generateContractPdf(contract);
 
-      log.info("pdfBytes {}",pdfBytes);
+      log.info("pdfBytes done! ");
 
       //2-1. ContractCreateRequest 생성
       ContractCreateRequest contractCreateRequest = buildContractCreateRequest(contract, transaction, pdfBytes);
