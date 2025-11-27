@@ -1,6 +1,7 @@
 package gighub.worketserver.service;
 
 import gighub.worketserver.domain.Contract;
+import gighub.worketserver.domain.ContractFile;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.Role;
@@ -10,6 +11,7 @@ import gighub.worketserver.global.exception.CommonErrorCode;
 import gighub.worketserver.global.exception.RestApiException;
 import gighub.worketserver.global.exception.TransactionErrorCode;
 import gighub.worketserver.global.exception.TransactionException;
+import gighub.worketserver.repository.ContractFileRepository;
 import gighub.worketserver.repository.ContractRepository;
 import gighub.worketserver.repository.TransactionRepository;
 import gighub.worketserver.repository.UserRepository;
@@ -46,6 +48,7 @@ public class TransactionService {
   private final TransactionRepository transactionRepository;
   private final UserRepository userRepository;
   private final ContractRepository contractRepository;
+  private final ContractFileRepository contractFileRepository;
 
   /**
    * 거래 전체 조회 (월별)
@@ -222,6 +225,11 @@ public class TransactionService {
 
     Contract contract = transaction.getContract();
 
+    ContractFile contractFile = contractFileRepository.findById(contract.getId())
+      .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "거래파일을 찾을 수 없습니다."));
+
+    String contractFileUrl = contractFile.getFileUrl();
+
     // 4단계: DTO 변환 시 null 안전 처리
     ClientInfoDto clientInfoDto = null;
     FreelancerInfoDto freelancerInfoDto = null;
@@ -251,7 +259,7 @@ public class TransactionService {
       .createdAt(transaction.getCreatedAt() != null ? transaction.getCreatedAt().format(DATETIME_FORMATTER) : null)
       .contractId(contract != null ? contract.getId() : null)
       .settledAmount(transaction.getSettlementAmount())
-      .contractFileUrl(contract != null ? "https://s3.amazonaws.com/bucket/contract-" + contract.getId() + ".pdf" : null)
+      .contractFileUrl(contract != null ?  contractFileUrl+ "contract.pdf" : null)
       .contractInfo(contract != null ? ContractInfoDto.builder()
         .title(contract.getTitle())
         .amount(contract.getAmount())
