@@ -58,10 +58,6 @@ pipeline {
                         # Git pull 최신 compose & env 파일 유지
                         git pull || true;
 
-                        # compose 환경변수 파일 저장
-                        echo "IMAGE_NAME=${DOCKER_IMAGE}" > ${ENV_FILE}
-                        echo "IMAGE_TAG=${DOCKER_TAG}" >> ${ENV_FILE}
-
                         # 최신 이미지 pull
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG};
 
