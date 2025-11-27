@@ -22,10 +22,10 @@ public class ContractFile {
   @JoinColumn(name = "contract_id", nullable = false)
   private Contract contract;
 
-  @Column(name = "file_url", nullable = false, length = 255)
+  @Column(name = "file_url", length = 255)
   private String fileUrl;
 
-  @Column(name = "file_hash", nullable = false, length = 64)
+  @Column(name = "file_hash", length = 64)
   private String fileHash;
 
   @Column(name = "uploaded_at")
