@@ -48,10 +48,12 @@ public class S3Service {
    */
   public String uploadContractFile(byte[] content, String fileName, String contentType) throws NoSuchAlgorithmException, IOException {
 
+
     // MD5 Base64 계산
     MessageDigest md = MessageDigest.getInstance("MD5");
     byte[] md5Bytes = md.digest(content);
     String md5Base64 = Base64.getEncoder().encodeToString(md5Bytes);
+    log.info("md5Base64, {}",md5Base64);
 
     // Presigned URL 발급 요청
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(s3BucketUrl + "/getTempPresignedUrl")
@@ -61,7 +63,9 @@ public class S3Service {
 
     ResponseEntity<Map> response = restTemplate
       .exchange(builder.build(false).toUriString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Map.class);
-    String presignedUrlString = objectMapper.readTree((String) response.getBody().get("body")).get("url").asText();
+    String presignedUrlString = (String) response.getBody().get("url");
+
+    log.info("presignedUrl Success! Status: {}", presignedUrlString );
 
     // PUT 요청 생성
     SdkHttpRequest.Builder requestBuilder = SdkHttpRequest.builder()
@@ -78,12 +82,14 @@ public class S3Service {
       .contentStreamProvider(() -> new ByteArrayInputStream(content))
       .build();
 
+    log.info("Headers before sending: {}", executeRequest.httpRequest().headers());
+
     // 전송 및 결과 확인
     HttpExecuteResponse executeResponse = sdkHttpClient.prepareRequest(executeRequest).call();
     int statusCode = executeResponse.httpResponse().statusCode();
 
     if (statusCode == 200) {
-      log.info("S3 Upload Success! Status: {}", statusCode);
+      log.info("{} S3 Upload Success! Status: {}", fileName ,statusCode);
       return presignedUrlString.split("\\?")[0];
     } else {
       // 실패 시 응답 본문 읽기 (에러 메시지 확인용)
@@ -97,7 +103,7 @@ public class S3Service {
         })
         .orElse("No Body");
 
-      log.error("S3 Upload Failed. Status: {}", statusCode);
+      log.error("{} S3 Upload Failed. Status: {}", fileName, statusCode);
       log.error("Error Body: {}", errorBody);
       throw new RuntimeException("S3 업로드 실패. 응답 코드: " + statusCode);
     }
@@ -125,7 +131,7 @@ public class S3Service {
 
     ResponseEntity<Map> response = restTemplate.exchange(builder.build(false).toUriString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Map.class);
 
-    String presignedUrlString = objectMapper.readTree((String) response.getBody().get("body")).get("url").asText();
+    String presignedUrlString = (String) response.getBody().get("url");
     return presignedUrlString;
   }
 
