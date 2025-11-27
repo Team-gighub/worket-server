@@ -66,8 +66,8 @@ pipeline {
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG};
 
                         # compose 재시작
-                        docker compose --env-file ${ENV_FILE} -f ${COMPOSE_FILE} down || true;
-                        docker compose --env-file ${ENV_FILE} -f ${COMPOSE_FILE} up -d;
+                        docker compose --env-file .env.prod -f docker-compose.prod.yml down || true;
+                        docker compose --env-file .env.prod -f docker-compose.prod.yml up -d;
                     '
                     """
                 }
