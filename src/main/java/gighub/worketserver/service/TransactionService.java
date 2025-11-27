@@ -225,10 +225,8 @@ public class TransactionService {
 
     Contract contract = transaction.getContract();
 
-    ContractFile contractFile = contractFileRepository.findById(contract.getId())
-      .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "거래파일을 찾을 수 없습니다."));
+    ContractFile contractFile = contractFileRepository.findByContractId(contract.getId());
 
-    String contractFileUrl = contractFile.getFileUrl();
 
     // 4단계: DTO 변환 시 null 안전 처리
     ClientInfoDto clientInfoDto = null;
@@ -259,7 +257,7 @@ public class TransactionService {
       .createdAt(transaction.getCreatedAt() != null ? transaction.getCreatedAt().format(DATETIME_FORMATTER) : null)
       .contractId(contract != null ? contract.getId() : null)
       .settledAmount(transaction.getSettlementAmount())
-      .contractFileUrl(contract != null ?  contractFileUrl+ "contract.pdf" : null)
+      .contractFileUrl(contractFile != null ?  contractFile.getFileUrl()+ "contract.pdf" : null)
       .contractInfo(contract != null ? ContractInfoDto.builder()
         .title(contract.getTitle())
         .amount(contract.getAmount())
