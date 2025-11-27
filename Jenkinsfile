@@ -5,7 +5,7 @@ pipeline {
         DOCKER_IMAGE = "rudska6/worket-server"
         DOCKER_TAG = "dev"
         EC2_HOST = "ubuntu@13.210.31.24"        // 백엔드 서버 IP
-        EC2_KEY = "ubuntu-ssh"                  // Jenkins SSH key ID
+        EC2_KEY = "deploy-key"                  // Jenkins SSH key ID
         COMPOSE_FILE = "docker-compose.prod.yml"
         ENV_FILE = ".env.prod"
     }
@@ -14,7 +14,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'feature/deploy-setup',
-                    credentialsId: 'github-credentials',
+                    credentialsId: 'github',
                     url: 'https://github.com/Team-gighub/worket-server.git'
             }
         }
@@ -50,7 +50,7 @@ pipeline {
 
         stage('Deploy to EC2 (docker-compose)') {
             steps {
-                sshagent(credentials: ['ubuntu-ssh']) {
+                sshagent(credentials: ['deploy-key']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${EC2_HOST} '
                         cd ~/worket-server || mkdir ~/worket-server && cd ~/worket-server;
