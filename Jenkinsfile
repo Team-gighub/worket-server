@@ -58,6 +58,8 @@ pipeline {
                         # 최신 이미지 pull
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG};
 
+                        docker rm -f worket-server || true
+
                         # compose 재시작
                         docker compose --env-file .env.prod -f docker-compose.prod.yml down || true;
                         docker compose --env-file .env.prod -f docker-compose.prod.yml up -d;
