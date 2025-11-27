@@ -55,9 +55,6 @@ pipeline {
                     ssh -v -o StrictHostKeyChecking=no ${EC2_HOST} '
                         cd ~/worket-server || mkdir ~/worket-server && cd ~/worket-server;
 
-                        # Git pull 최신 compose & env 파일 유지
-                        git pull || true;
-
                         # 최신 이미지 pull
                         docker pull ${DOCKER_IMAGE}:${DOCKER_TAG};
 
