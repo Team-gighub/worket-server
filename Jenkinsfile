@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "rudska6/worket-server"
         DOCKER_TAG = "latest"
-        EC2_HOST = "ubuntu@16.184.56.88"        // 백엔드 서버 IP
+        EC2_HOST = "ubuntu@${SERVER_IP}"        // 백엔드 서버 IP
         EC2_KEY = "deploy-key"                  // Jenkins SSH key ID
         COMPOSE_FILE = "docker-compose.yml"
         ENV_FILE = ".env"
