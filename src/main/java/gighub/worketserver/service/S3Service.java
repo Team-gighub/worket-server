@@ -67,7 +67,7 @@ public class S3Service {
       .exchange(builder.build(false).toUriString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Map.class);
     String presignedUrlString = (String) response.getBody().get("url");
 
-    log.info("presignedUrl Success! Status: {}", presignedUrlString );
+    log.info("presignedUrl Success! Status: {}", presignedUrlString);
 
     // PUT 요청 생성
     SdkHttpRequest.Builder requestBuilder = SdkHttpRequest.builder()
@@ -91,7 +91,7 @@ public class S3Service {
     int statusCode = executeResponse.httpResponse().statusCode();
 
     if (statusCode == 200) {
-      log.info("{} S3 Upload Success! Status: {}", fileName ,statusCode);
+      log.info("{} S3 Upload Success! Status: {}", fileName, statusCode);
       return presignedUrlString.split("\\?")[0];
     } else {
       // 실패 시 응답 본문 읽기 (에러 메시지 확인용)
@@ -115,7 +115,7 @@ public class S3Service {
    * 파일 조회/다운로드를 위한 getPresignedUrl 함수
    *
    * @param bucketName S3에 존재하는 버킷의 이름을 전달합니다.( s3-worket-bucket: 서명 파일, 계약서 임시 저장 폴더 존재, worket-contract-immutable: 계약서 최종 저장 버킷)
-   * @param url   저장된 url
+   * @param url        저장된 url
    */
   public String getPresignedUrl(String bucketName, String url) throws JsonProcessingException, URISyntaxException {
     URI uri = new URI(url);
@@ -169,11 +169,10 @@ public class S3Service {
    * @throws UnsupportedEncodingException
    */
   public void finalizeContractUpload(String folderName) throws JsonProcessingException, UnsupportedEncodingException {
-    String decodedFolderName = URLDecoder.decode(folderName, StandardCharsets.UTF_8.toString());
 
     // Presigned URL 발급 요청
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(s3BucketUrl + "/finalizeContractUpload")
-      .queryParam("filename", decodedFolderName);
+      .queryParam("filename", folderName);
 
     // POST 요청 & 응답
     ResponseEntity<Map> response = restTemplate.exchange(builder.build(false).toUriString(), HttpMethod.POST, new HttpEntity<>(new HttpHeaders()), Map.class);
