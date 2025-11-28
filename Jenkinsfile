@@ -7,7 +7,7 @@ pipeline {
         EC2_HOST = "ubuntu@13.210.31.24"        // 백엔드 서버 IP
         EC2_KEY = "deploy-key"                  // Jenkins SSH key ID
         COMPOSE_FILE = "docker-compose.yml"
-        ENV_FILE = ".env.prod"
+        ENV_FILE = ".env"
     }
 
     stages {
@@ -60,7 +60,7 @@ pipeline {
 
                         docker rm -f worket-server || true
 
-                        docker compose --env-file .env.prod -f docker-compose.prod.yml up -d;
+                        docker compose up -d;
                     '
                     """
                 }
