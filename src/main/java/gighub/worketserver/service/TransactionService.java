@@ -232,12 +232,10 @@ public class TransactionService {
     ClientInfoDto clientInfoDto = null;
     FreelancerInfoDto freelancerInfoDto = null;
     if (contract != null) {
-      if (contract.getClient() != null) {
-        clientInfoDto = ClientInfoDto.builder()
-          .name(contract.getClient().getName())
-          .phone(contract.getClient().getPhone())
-          .build();
-      }
+      clientInfoDto = ClientInfoDto.builder()
+        .name(contract.getClientName())
+        .phone(contract.getClientPhone())
+        .build();
       if (contract.getFreelancer() != null) {
         freelancerInfoDto = FreelancerInfoDto.builder()
           .name(contract.getFreelancer().getName())
