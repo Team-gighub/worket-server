@@ -31,6 +31,7 @@ public class ProfileCheckFilter extends OncePerRequestFilter {
     return uri.startsWith("/test")
       || uri.startsWith("/oauth2")
       || uri.startsWith("/auth/passcode")
+      || uri.startsWith("/actuator")
       || uri.matches("^/transactions/\\d+/preview$");
   }
 
