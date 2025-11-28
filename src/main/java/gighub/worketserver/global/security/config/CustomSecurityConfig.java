@@ -27,6 +27,7 @@ import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationC
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
@@ -74,10 +75,12 @@ public class CustomSecurityConfig {
       .httpBasic(basic -> basic.disable())
 
       .authorizeHttpRequests(auth -> auth
+        .requestMatchers("/login/oauth2/**").permitAll()
         .requestMatchers("/oauth2/**").permitAll()
         .requestMatchers("/auth/token/**").permitAll()
         .requestMatchers("/test").permitAll()
         .requestMatchers("/transactions/*/preview").permitAll()
+        .requestMatchers("/actuator/**").permitAll()
         .anyRequest().authenticated()
       )
 
@@ -96,7 +99,7 @@ public class CustomSecurityConfig {
         .accessDeniedHandler(customAccessDeniedHandler)
       )
 
-      .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+      .addFilterAfter(tokenAuthenticationFilter, OAuth2LoginAuthenticationFilter.class)
       .addFilterAfter(profileCheckFilter, AuthorizationFilter.class)
       .addFilterAfter(passcodeCheckFilter, AuthorizationFilter.class);
 
