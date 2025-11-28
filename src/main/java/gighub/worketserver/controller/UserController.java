@@ -65,9 +65,4 @@ public class UserController {
     userService.updateUser(userId, request);
     return ApiResponse.ok(null);
   }
-
-  @GetMapping("test")
-  public ApiResponse<?> test(Authentication authentication) {
-    return ApiResponse.ok(null);
-  }
 }
