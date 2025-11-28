@@ -17,6 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -24,6 +25,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Map;
 
+import software.amazon.awssdk.core.client.builder.SdkDefaultClientBuilder;
 import software.amazon.awssdk.http.*;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.utils.IoUtils;
@@ -33,10 +35,10 @@ import software.amazon.awssdk.utils.IoUtils;
 @RequiredArgsConstructor
 public class S3Service {
 
-  @Value("${s3.bucket-api-url}")
-  private String s3BucketUrl;
   private final ObjectMapper objectMapper;
   private final RestTemplate restTemplate;
+  @Value("${s3.bucket-api-url}")
+  private String s3BucketUrl;
   private SdkHttpClient sdkHttpClient = ApacheHttpClient.create();
 
   /**
@@ -48,6 +50,7 @@ public class S3Service {
    *
    */
   public String uploadContractFile(byte[] content, String fileName, String contentType) throws NoSuchAlgorithmException, IOException {
+
 
     // MD5 Base64 계산
     MessageDigest md = MessageDigest.getInstance("MD5");
@@ -62,7 +65,9 @@ public class S3Service {
 
     ResponseEntity<Map> response = restTemplate
       .exchange(builder.build(false).toUriString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Map.class);
-    String presignedUrlString = objectMapper.readTree((String) response.getBody().get("body")).get("url").asText();
+    String presignedUrlString = (String) response.getBody().get("url");
+
+    log.info("presignedUrl Success! Status: {}", presignedUrlString );
 
     // PUT 요청 생성
     SdkHttpRequest.Builder requestBuilder = SdkHttpRequest.builder()
@@ -79,12 +84,14 @@ public class S3Service {
       .contentStreamProvider(() -> new ByteArrayInputStream(content))
       .build();
 
+    log.info("Headers before sending: {}", executeRequest.httpRequest().headers());
+
     // 전송 및 결과 확인
     HttpExecuteResponse executeResponse = sdkHttpClient.prepareRequest(executeRequest).call();
     int statusCode = executeResponse.httpResponse().statusCode();
 
     if (statusCode == 200) {
-      log.info("S3 Upload Success! Status: {}", statusCode);
+      log.info("{} S3 Upload Success! Status: {}", fileName ,statusCode);
       return presignedUrlString.split("\\?")[0];
     } else {
       // 실패 시 응답 본문 읽기 (에러 메시지 확인용)
@@ -98,7 +105,7 @@ public class S3Service {
         })
         .orElse("No Body");
 
-      log.error("S3 Upload Failed. Status: {}", statusCode);
+      log.error("{} S3 Upload Failed. Status: {}", fileName, statusCode);
       log.error("Error Body: {}", errorBody);
       throw new RuntimeException("S3 업로드 실패. 응답 코드: " + statusCode);
     }
@@ -108,22 +115,25 @@ public class S3Service {
    * 파일 조회/다운로드를 위한 getPresignedUrl 함수
    *
    * @param bucketName S3에 존재하는 버킷의 이름을 전달합니다.( s3-worket-bucket: 서명 파일, 계약서 임시 저장 폴더 존재, worket-contract-immutable: 계약서 최종 저장 버킷)
-   * @param fileName   contractID를 포함하는 경로와 함께 서명 파일명을 인자로 전달합니다.
-   *                   예시: {directoryName}/{contractId}/{signer}_signature_{timestamp}.png
-   *                   1) contracts-temp: 계약서 관련 파일들이 업로드되는 디렉토리
-   *                   2) signatures: 서명 파일들이 업로드되는 디렉토리
+   * @param url   저장된 url
    */
-  public String getPresignedUrl(String bucketName, String fileName) throws JsonProcessingException, UnsupportedEncodingException {
-    String decodedFilename = URLDecoder.decode(fileName, StandardCharsets.UTF_8.toString());
+  public String getPresignedUrl(String bucketName, String url) throws JsonProcessingException, URISyntaxException {
+    URI uri = new URI(url);
+    String fileName = uri.getPath();
+
+    // 맨 앞의 슬래시 제거
+    if (fileName.startsWith("/")) {
+      fileName = fileName.substring(1);
+    }
 
     // Presigned URL 발급 요청
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(s3BucketUrl + "/getDownloadPresignedUrl")
       .queryParam("bucket", bucketName)
-      .queryParam("filename", decodedFilename);
+      .queryParam("filename", fileName);
 
     ResponseEntity<Map> response = restTemplate.exchange(builder.build(false).toUriString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Map.class);
 
-    String presignedUrlString = objectMapper.readTree((String) response.getBody().get("body")).get("url").asText();
+    String presignedUrlString = (String) response.getBody().get("url");
     return presignedUrlString;
   }
 

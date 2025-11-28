@@ -1,6 +1,7 @@
 package gighub.worketserver.service;
 
 import gighub.worketserver.domain.Contract;
+import gighub.worketserver.domain.ContractFile;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.Role;
@@ -10,6 +11,8 @@ import gighub.worketserver.global.exception.CommonErrorCode;
 import gighub.worketserver.global.exception.RestApiException;
 import gighub.worketserver.global.exception.TransactionErrorCode;
 import gighub.worketserver.global.exception.TransactionException;
+import gighub.worketserver.repository.ContractFileRepository;
+import gighub.worketserver.repository.ContractRepository;
 import gighub.worketserver.repository.TransactionRepository;
 import gighub.worketserver.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,11 +42,13 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class TransactionService {
 
+  public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
+  public static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+
   private final TransactionRepository transactionRepository;
   private final UserRepository userRepository;
-
-  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE;
-  private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+  private final ContractRepository contractRepository;
+  private final ContractFileRepository contractFileRepository;
 
   /**
    * 거래 전체 조회 (월별)
@@ -121,7 +126,7 @@ public class TransactionService {
    * 거래 접근권한 판단
    * * @param transactionId 조회할 거래 ID
    */
-  @Transactional(readOnly = true)
+  @Transactional
   public TransactionPermissionResponse checkPermission(Authentication authentication, Long transactionId) {
     // 1. 토큰에서 사용자 ID 추출 및 사용자 정보 조회
     Long userId = Long.parseLong(authentication.getName());
@@ -167,9 +172,14 @@ public class TransactionService {
       // 3-1. 현재 사용자가 이름/전화번호로 확인되는 미등록 클라이언트인지 확인
       if (currentUser.getName().equals(contract.getClientName())
         && currentUser.getPhone().equals(contract.getClientPhone())) {
-        log.info("Access granted by Name/Phone for client: {}", contract.getClientName());
+        log.info("Access granted by Name/Phone for client: {},{}", contract.getClientName(),contract.getClientPhone());
 
-        throw new TransactionException(TransactionErrorCode.CLIENT_LINKAGE_REQUIRED);
+
+        contract.updateClient(currentUser);
+        contractRepository.save(contract);
+
+        permission = true;
+        role = Role.CLIENT.name();
       }
 
       // 3-2. 현재 사용자가 Freelancer인지 확인 (ID 기반)
@@ -215,16 +225,17 @@ public class TransactionService {
 
     Contract contract = transaction.getContract();
 
+    ContractFile contractFile = contractFileRepository.findByContractId(contract.getId());
+
+
     // 4단계: DTO 변환 시 null 안전 처리
     ClientInfoDto clientInfoDto = null;
     FreelancerInfoDto freelancerInfoDto = null;
     if (contract != null) {
-      if (contract.getClient() != null) {
-        clientInfoDto = ClientInfoDto.builder()
-          .name(contract.getClient().getName())
-          .phone(contract.getClient().getPhone())
-          .build();
-      }
+      clientInfoDto = ClientInfoDto.builder()
+        .name(contract.getClientName())
+        .phone(contract.getClientPhone())
+        .build();
       if (contract.getFreelancer() != null) {
         freelancerInfoDto = FreelancerInfoDto.builder()
           .name(contract.getFreelancer().getName())
@@ -244,7 +255,7 @@ public class TransactionService {
       .createdAt(transaction.getCreatedAt() != null ? transaction.getCreatedAt().format(DATETIME_FORMATTER) : null)
       .contractId(contract != null ? contract.getId() : null)
       .settledAmount(transaction.getSettlementAmount())
-      .contractFileUrl(contract != null ? "https://s3.amazonaws.com/bucket/contract-" + contract.getId() + ".pdf" : null)
+      .contractFileUrl(contractFile != null ?  contractFile.getFileUrl()+ "contract.pdf" : null)
       .contractInfo(contract != null ? ContractInfoDto.builder()
         .title(contract.getTitle())
         .amount(contract.getAmount())

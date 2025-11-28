@@ -62,8 +62,8 @@ public class ContractController {
     Authentication authentication,
     @PathVariable Long contractId,
     @RequestBody SignatureRequest request
-  ) {
-    contractService.registerSignature(authentication, contractId, request);
+  ) throws IOException, NoSuchAlgorithmException {
+     contractService.registerSignature(authentication, contractId, request);
     return ApiResponse.ok(null);
   }
 }

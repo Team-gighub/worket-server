@@ -36,6 +36,8 @@ import java.util.Map;
 
 import gighub.worketserver.dto.UploadResultDTO;
 
+import static gighub.worketserver.service.TransactionService.DATE_FORMATTER;
+
 /**
  * 계약서 관련 비즈니스 로직 Service
  */
@@ -53,6 +55,7 @@ public class ContractService {
   private final ObjectMapper objectMapper;
   private final S3Service s3Service;
   private final ContractFileRepository contractFileRepository;
+  private final PdfGenerationService pdfGenerationService;
 
 
   /**
@@ -96,8 +99,11 @@ public class ContractService {
 
     Contract contract = createAndSaveContract(request, freelancer); // Contract 생성
     Transaction transaction = createAndSaveTransaction(request, contract); // Transaction 생성
-    UploadResultDTO uploadResult = uploadContractFilesToS3(request, contract); // S3 업로드
-    saveContractFileRecord(contract, uploadResult.getUploadedContractFileUrl(), uploadResult.getHash()); // Contract File 저장
+    UploadResultDTO uploadResult = null;
+    if (request.getType() == ContractType.UPLOAD) {
+      uploadResult = uploadContractFilesToS3(request, contract); // S3 업로드
+      saveContractFileRecord(contract, uploadResult.getUploadedContractFileUrl(), uploadResult.getHash()); // contract file table에 저장
+    }
 
     return buildCreateResponse(transaction, contract);
   }
@@ -106,7 +112,7 @@ public class ContractService {
    * 서명 등록
    */
   @Transactional
-  public void registerSignature(Authentication authentication, Long contractId, SignatureRequest request) {
+  public void registerSignature(Authentication authentication, Long contractId, SignatureRequest request) throws IOException, NoSuchAlgorithmException {
     Long userId = Long.parseLong(authentication.getName());
     PrincipalDetails principal = (PrincipalDetails) authentication.getPrincipal();
     Role role = principal.getUser().getRole();
@@ -122,9 +128,38 @@ public class ContractService {
     //프리랜서의 경우 저장
     if (role.equals(Role.FREELANCER)) {
       contract.updateFreelancerSignUrl(request.getSignatureUrl());
-    }//클라이언트의 경우 저장, 상태 바꾸고
+    }
+    /* 클라이언트의 경우 저장
+    * 1. db에 서명 저장
+    * 2. 계약서 pdf만들기
+    * 3. 만들어진 pdf s3에 올리기
+    * 4. db에 pdfUrl 저장
+    * 5. status 업데이트("SIGNED")
+    * */
     else if (role.equals(Role.CLIENT)) {
+      log.info("user role: {}",role);
+      // 1. db에 서명 저장
       contract.updateClientSignUrl(request.getSignatureUrl());
+      contractRepository.save(contract);
+
+      //2. 계약서 pdf만들기
+      byte[] pdfBytes = pdfGenerationService.generateContractPdf(contract);
+
+      log.info("pdfBytes done! ");
+
+      //2-1. ContractCreateRequest 생성
+      ContractCreateRequest contractCreateRequest = buildContractCreateRequest(contract, transaction, pdfBytes);
+      log.info("contractCreateRequest : {}", contractCreateRequest);
+      //3. 만들어진 계약 s3에 올리기
+      UploadResultDTO uploadResult = null;
+      uploadResult = uploadContractFilesToS3(contractCreateRequest, contract); // S3 업로드
+
+
+
+      //4. db에 contractFile 저장
+      saveContractFileRecord(contract, uploadResult.getUploadedContractFileUrl(), uploadResult.getHash());
+
+      //5. status 업데이트("SIGNED")
       TransactionStatus status = TransactionStatus.SIGNED;
       transaction.updateStatus(status);
     }
@@ -305,5 +340,51 @@ public class ContractService {
       .contractId(contract.getId())
       .build();
   }
+
+   /**
+    *
+    * @param contract   계약 엔티티
+    * @param transaction 거래 엔티티 (프리랜서 계좌 및 은행 정보 포함)
+    * @param pdfBytes   생성된 계약서 PDF 파일의 byte 배열
+    * @return ContractCreateRequest 계약서 생성 요청 DTO
+    */
+  private ContractCreateRequest buildContractCreateRequest(Contract contract, Transaction transaction, byte[] pdfBytes) {
+
+    ClientInfoDto clientInfoDto = null;
+    FreelancerInfoDto freelancerInfoDto = null;
+
+    if (contract != null) {
+      if (contract.getClient() != null) {
+        clientInfoDto = ClientInfoDto.builder()
+          .name(contract.getClient().getName())
+          .phone(contract.getClient().getPhone())
+          .build();
+      }
+      if (contract.getFreelancer() != null) {
+        freelancerInfoDto = FreelancerInfoDto.builder()
+          .name(contract.getFreelancer().getName())
+          .phone(contract.getFreelancer().getPhone())
+          .account(transaction.getFreelancerAccount())
+          .bank(transaction.getFreelancerBank())
+          .build();
+      }
+    }
+
+    return ContractCreateRequest.builder()
+      .type(contract.getType())
+      .contractInfo(
+        ContractInfoDto.builder()
+          .title(contract.getTitle())
+          .amount(contract.getAmount())
+          .startDate(contract.getStartDate() != null ? contract.getStartDate().format(DATE_FORMATTER) : null)
+          .endDate(contract.getEndDate() != null ? contract.getEndDate().format(DATE_FORMATTER) : null)
+          .build()
+      )
+      .clientInfo(clientInfoDto)
+      .freelancerInfo(freelancerInfoDto)
+      .pdfFile(pdfBytes)
+      .build();
+  }
+
 
 }
