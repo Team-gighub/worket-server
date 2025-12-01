@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "transaction")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -69,6 +70,12 @@ public class Transaction {
   @Column(name = "updated_at")
   @Builder.Default
   private LocalDateTime updatedAt = LocalDateTime.now();
+
+  @Column(name = "escrow_confim_tid")
+  private String escrowConfimId;
+
+  @Column(name="settlement_tid")
+  private String settlementId;
 
   @PrePersist
   public void prePersist() {
