@@ -30,6 +30,14 @@ pipeline {
             }
         }
 
+//         stage('Quality Gate') {
+//             steps {
+//                 timeout(time: 2, unit: 'MINUTES') {
+//                     waitForQualityGate abortPipeline: true     // FAIL 시 배포 중단
+//                 }
+//             }
+//         }
+
         stage('Build JAR') {
             steps {
                 sh 'chmod +x gradlew'
