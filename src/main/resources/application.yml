@@ -4,9 +4,9 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:test}?serverTimezone=Asia/Seoul
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
 
   jpa:
     show_sql: true
@@ -14,7 +14,7 @@ spring:
       hibernate:
         format_sql: true
     hibernate:
-      ddl-auto: ${DDL_AUTO}
+      ddl-auto: ${DDL_AUTO:none}
     database-platform: org.hibernate.dialect.MySQLDialect
 
   security:
@@ -22,34 +22,37 @@ spring:
       client:
         registration:
           kakao:
-            client-id: ${KAKAO_CLIENT}
-            client-secret: ${KAKAO_SECRET}
-            redirect-uri: ${KAKAO_REDIRECT_URI}
+            client-id: ${KAKAO_CLIENT:dummy-client-id}
+            client-secret: ${KAKAO_SECRET:dummy-secret}
+            redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/login/oauth2/code/kakao}
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
-            scope: # kakao 개인 정보 동의 항목 설정의 ID 값
+            scope:
               - profile_nickname
             client-name: kakao
 
-        # kakao provider 설정
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
-            user-name-attribute: id # 유저 정보 조회 시 반환되는 최상위 필드명으로 해야 한다.
+            user-name-attribute: id
+
 naver:
   ocr:
-    secret: ${OCR_SECRET}
-    url: ${OCR_URL}
+    secret: ${OCR_SECRET:dummy-ocr-secret}
+    url: ${OCR_URL:https://dummy-ocr-url}
 
 gemini:
-  secret: ${GEMINI_SECRET}
-  model: ${GEMINI_MODEL}
-  url: ${GEMINI_URL}
+  secret: ${GEMINI_SECRET:dummy-gemini-secret}
+  model: ${GEMINI_MODEL:gemini-1.0}
+  url: ${GEMINI_URL:https://dummy-gemini-url}
 
 frontend:
-  base-url: ${FRONTEND_BASE_URL}
+  base-url: ${FRONTEND_BASE_URL:http://localhost:3000}
 
 s3:
-  bucket-api-url: ${S3_BUCKET_API_URL}
+  bucket-api-url: ${S3_BUCKET_API_URL:https://dummy-s3-url}
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY:Z3VAbXp5d0FOMlRrc2pCTE9wNkh4S1hCYWZsR1pCZ0Z4cHBXTXh0RQ==}
