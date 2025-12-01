@@ -21,6 +21,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
+                sh 'chmod +x gradlew'
                 withSonarQubeEnv('sonarqube') {
                     sh """
                         ./gradlew clean test sonarqube
