@@ -13,9 +13,19 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main',
+                git branch: 'feature/deploy-setup',
                     credentialsId: 'github',
                     url: 'https://github.com/Team-gighub/worket-server.git'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh """
+                        ./gradlew clean test sonarqube
+                    """
+                }
             }
         }
 
