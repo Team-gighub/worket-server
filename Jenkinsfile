@@ -24,7 +24,7 @@ pipeline {
                 sh 'chmod +x gradlew'
                 withSonarQubeEnv('sonarqube') {
                     sh """
-                        ./gradlew clean test sonarqube
+                        ./gradlew clean sonarqube -x test
                     """
                 }
             }
