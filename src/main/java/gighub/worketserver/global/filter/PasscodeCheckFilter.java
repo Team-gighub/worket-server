@@ -2,8 +2,6 @@ package gighub.worketserver.global.filter;
 
 import gighub.worketserver.domain.User;
 import gighub.worketserver.domain.constants.Role;
-import gighub.worketserver.global.exception.PasscodeErrorCode;
-import gighub.worketserver.global.exception.PasscodeException;
 import gighub.worketserver.global.exception.PasscodeForFilterErrorCode;
 import gighub.worketserver.global.exception.PasscodeForFilterException;
 import gighub.worketserver.global.security.dto.PrincipalDetails;
