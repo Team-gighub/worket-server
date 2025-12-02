@@ -7,12 +7,12 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "contract_modify")
+@Table(name = "contract_modification_requests")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class ContractModify {
+public class ContractModification {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "modification_id")
