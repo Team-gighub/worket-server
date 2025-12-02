@@ -65,11 +65,11 @@ public class PaymentService {
   }
 
   @Transactional(readOnly = true)
-  public CoreConfirmResponse confirm(Long transactionId ,String escrowId, String merchantId) {
+  public CoreConfirmResponse confirm(Long transactionId ,String escrowId, String marchantId) {
     // 1) 계정계 서버로 요청 생성
     CoreConfirmRequest request = new CoreConfirmRequest(
       escrowId,
-      merchantId
+      marchantId
     );
     // 2) 계정계 서버 호출
     CoreConfirmResponse coreResp = coreApiClient.requestPaymentConfirm(request);
