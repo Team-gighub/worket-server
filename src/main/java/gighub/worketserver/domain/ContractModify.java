@@ -28,7 +28,7 @@ public class ContractModify {
   @Column(name = "status")
   private ModifyStatus status;
 
-  @Column(name = "create_at")
+  @Column(name = "created_at")
   private LocalDateTime createdAt;
 
   @Column(name = "content")

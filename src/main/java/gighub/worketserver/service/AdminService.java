@@ -5,6 +5,8 @@ import gighub.worketserver.domain.ContractModify;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.constants.ModifyStatus;
 import gighub.worketserver.dto.*;
+import gighub.worketserver.global.exception.CommonErrorCode;
+import gighub.worketserver.global.exception.RestApiException;
 import gighub.worketserver.repository.ContractModifyRepository;
 import gighub.worketserver.repository.ContractRepository;
 import gighub.worketserver.repository.TransactionRepository;
@@ -36,7 +38,7 @@ public class AdminService {
    */
   public void createModification(ContractModifyRequest request) {
     Transaction transaction = transactionRepository.findById(request.getTransactionId()).
-      orElseThrow(() -> new RuntimeException("Transaction not found"));
+      orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "거래 내역이 없습니다."));
     ContractModify contractModify = ContractModify.builder()
       .transaction(transaction)
       .userName(request.getUserName())
@@ -51,7 +53,7 @@ public class AdminService {
    * 수정 계약서 조회
    */
   public List<ContractModificationResponse> getModificationList() {
-    List<ContractModify> contractModifyList = contractModifyRepository.findAll();
+    List<ContractModify> contractModifyList = contractModifyRepository.findAllWithTransaction();
     // 2. Stream을 사용하여 리스트를 즉시 변환합니다.
     List<ContractModificationResponse> responseList = contractModifyList.stream()
       .map(entity -> ContractModificationResponse.builder()
@@ -79,7 +81,6 @@ public class AdminService {
     ContractModify contractModify = contractModifyRepository.findById(id).orElseThrow(() -> new RuntimeException("Contract not found"));
     Transaction transaction = transactionRepository.findById(contractModify.getTransaction().getId()).orElseThrow(() -> new RuntimeException("Transaction not found"));
     Contract contract = contractRepository.findById(transaction.getContract().getId()).orElseThrow(() -> new RuntimeException("Contract not found"));
-    ContractModificationDetail detail = new ContractModificationDetail();
     //사용자 정보
     ClientInfoDto clientInfoDto = ClientInfoDto.builder()
       .name(contract.getClient().getName())
@@ -102,20 +103,22 @@ public class AdminService {
       .endDate(contract.getEndDate() != null ? contract.getEndDate().format(DATE_FORMATTER) : null)
       .build();
 
-    detail.setClientInfoDto(clientInfoDto);
-    detail.setFreelancerInfoDto(freelancerInfoDto);
-    detail.setContractInfoDto(contractInfoDto);
-    detail.setContent(contractModify.getContent());
-    return detail;
+    return ContractModificationDetail.builder()
+      .clientInfoDto(clientInfoDto)
+      .freelancerInfoDto(freelancerInfoDto)
+      .contractInfoDto(contractInfoDto)
+      .content(contractModify.getContent())
+      .build();
   }
 
   /**
    * 수정 계약서 변경 적용
    */
   public void applyModification(Long id, ContractModificationDetail detail) {
-    ContractModify modify = contractModifyRepository.findById(id).orElseThrow(() -> new RuntimeException("Contract not found"));
-    Transaction transaction = transactionRepository.findById(modify.getTransaction().getId()).orElseThrow(() -> new RuntimeException("Transaction not found"));
-    Contract contract = contractRepository.findById(transaction.getContract().getId()).orElseThrow(() -> new RuntimeException("Contract not found"));
+    ContractModify contractModify = contractModifyRepository.findWithTransactionAndContractById(id)
+      .orElseThrow(() -> new RuntimeException("수정 요청을 찾을 수 없습니다.")); // 예외 메시지 수정 권장    Transaction transaction = transactionRepository.findById(modify.getTransaction().getId()).orElseThrow(() -> new RuntimeException("Transaction not found"));
+    Transaction transaction = contractModify.getTransaction();
+    Contract contract = contractModify.getTransaction().getContract();
     //프리랜서 정보 변경
     transaction.updateFreelancerInfo(detail.getFreelancerInfoDto());
     // 클라이언트 정보 변경
@@ -123,11 +126,8 @@ public class AdminService {
     // 계약 정보 변경
     contract.updateContractInfo(detail.getContractInfoDto());
 
-    contractRepository.save(contract);
-    transactionRepository.save(transaction);
     // 싱테 변경
-    modify.updateStatus(ModifyStatus.APPROVED);
-    contractModifyRepository.save(modify);
+    contractModify.updateStatus(ModifyStatus.APPROVED);
 
   }
 }
