@@ -1,8 +1,6 @@
 package gighub.worketserver.controller;
 
-import gighub.worketserver.dto.PasscodeDto;
-import gighub.worketserver.dto.PaymentApprovalRequest;
-import gighub.worketserver.dto.PaymentApprovalResponse;
+import gighub.worketserver.dto.*;
 import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.service.PaymentService;
 import gighub.worketserver.service.SampleService;
@@ -20,5 +18,11 @@ public class PaymentController {
   public ApiResponse<PaymentApprovalResponse> approval(@Valid @RequestBody PaymentApprovalRequest request) {
 
     return ApiResponse.ok(paymentService.approval(request.getTransactionId(),request.getEscrowId(), request.getConfirmToken()));
+  }
+
+  @PostMapping("/confirm")
+  public ApiResponse<CoreConfirmResponse> confirm(@Valid @RequestBody PaymentConfirmRequest request) {
+
+    return ApiResponse.ok(paymentService.confirm(request.getTransactionId(), request.getEscrowId(), request.getMarchantId()));
   }
 }

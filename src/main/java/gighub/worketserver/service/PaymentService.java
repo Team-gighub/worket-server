@@ -4,6 +4,8 @@ import gighub.worketserver.client.CoreApiClient;
 import gighub.worketserver.domain.Transaction;
 import gighub.worketserver.domain.constants.TransactionStatus;
 import gighub.worketserver.dto.CoreApprovalRequest;
+import gighub.worketserver.dto.CoreConfirmRequest;
+import gighub.worketserver.dto.CoreConfirmResponse;
 import gighub.worketserver.dto.PaymentApprovalResponse;
 import gighub.worketserver.global.exception.CommonErrorCode;
 import gighub.worketserver.global.exception.RestApiException;
@@ -59,6 +61,40 @@ public class PaymentService {
       .holdAmount(coreResp.getHoldAmount())
       .platformFee(coreResp.getPlatformFee())
       .holdStartDatetime(coreResp.getHoldStartDatetime())
+      .build();
+  }
+
+  @Transactional(readOnly = true)
+  public CoreConfirmResponse confirm(Long transactionId ,String escrowId, String merchantId) {
+    // 1) 계정계 서버로 요청 생성
+    CoreConfirmRequest request = new CoreConfirmRequest(
+      escrowId,
+      merchantId
+    );
+    // 2) 계정계 서버 호출
+    CoreConfirmResponse coreResp = coreApiClient.requestPaymentConfirm(request);
+
+    if (coreResp == null) {
+      throw new RestApiException(CommonErrorCode.INTERNAL_SERVER_ERROR,"core 접근 중 에러 발생");
+    }
+
+    log.info("▶ 계정계 서버 승인 응답 도착 → escrowId={}, status={}",
+      coreResp.getPaymentId());
+
+    // 3) transaction 테이블 업데이트
+    Transaction tx = transactionRepository.findById(transactionId)
+      .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "Transaction을 찾을 수 없습니다"));
+
+    tx.setSettlementId(coreResp.getPaymentId());
+    transactionRepository.save(tx);
+
+    //status 업데이트("PAYMENT_CONFIRMED")
+    TransactionStatus status = TransactionStatus.PAYMENT_CONFIRMED;
+    tx.updateStatus(status);
+
+    // 4) 컨트롤러에 그대로 반환할 응답 조립
+    return CoreConfirmResponse.builder()
+      .paymentId(coreResp.getPaymentId())
       .build();
   }
 

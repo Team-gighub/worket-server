@@ -1,6 +1,8 @@
 package gighub.worketserver.client;
 
 import gighub.worketserver.dto.CoreApprovalRequest;
+import gighub.worketserver.dto.CoreConfirmRequest;
+import gighub.worketserver.dto.CoreConfirmResponse;
 import gighub.worketserver.dto.PaymentApprovalResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,4 +16,8 @@ public interface CoreApiClient {
 
   @PostMapping("/payment/approval")
   PaymentApprovalResponse requestPaymentApproval(@RequestBody CoreApprovalRequest request);
+
+  @PostMapping("/payment/confirm")
+  CoreConfirmResponse requestPaymentConfirm(@RequestBody CoreConfirmRequest request);
+
 }

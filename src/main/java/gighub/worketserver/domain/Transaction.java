@@ -60,9 +60,6 @@ public class Transaction {
   @Column(name = "settled_at")
   private LocalDateTime settledAt;
 
-  @Column(name = "settlement_tx_id")
-  private Long settlementTxId;
-
   @Column(name = "created_at")
   @Builder.Default
   private LocalDateTime createdAt = LocalDateTime.now();
