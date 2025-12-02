@@ -1,13 +1,13 @@
 package gighub.worketserver.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import gighub.worketserver.global.exception.CommonErrorCode;
+import gighub.worketserver.global.exception.RestApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -15,8 +15,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -53,7 +56,6 @@ public class S3Service {
     MessageDigest md = MessageDigest.getInstance("MD5");
     byte[] md5Bytes = md.digest(content);
     String md5Base64 = Base64.getEncoder().encodeToString(md5Bytes);
-    log.info("md5Base64, {}",md5Base64);
 
     // Presigned URL 발급 요청
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(s3BucketUrl + "/getTempPresignedUrl")
@@ -65,7 +67,7 @@ public class S3Service {
       .exchange(builder.build(false).toUriString(), HttpMethod.GET, new HttpEntity<>(new HttpHeaders()), Map.class);
     String presignedUrlString = (String) response.getBody().get("url");
 
-    log.info("presignedUrl Success! Status: {}", presignedUrlString );
+    log.info("presignedUrl Success! Status: {}", presignedUrlString);
 
     // PUT 요청 생성
     SdkHttpRequest.Builder requestBuilder = SdkHttpRequest.builder()
@@ -89,7 +91,7 @@ public class S3Service {
     int statusCode = executeResponse.httpResponse().statusCode();
 
     if (statusCode == 200) {
-      log.info("{} S3 Upload Success! Status: {}", fileName ,statusCode);
+      log.info("{} S3 Upload Success! Status: {}", fileName, statusCode);
       return presignedUrlString.split("\\?")[0];
     } else {
       // 실패 시 응답 본문 읽기 (에러 메시지 확인용)
@@ -113,7 +115,7 @@ public class S3Service {
    * 파일 조회/다운로드를 위한 getPresignedUrl 함수
    *
    * @param bucketName S3에 존재하는 버킷의 이름을 전달합니다.( s3-worket-bucket: 서명 파일, 계약서 임시 저장 폴더 존재, worket-contract-immutable: 계약서 최종 저장 버킷)
-   * @param url   저장된 url
+   * @param url        저장된 url
    */
   public String getPresignedUrl(String bucketName, String url) throws JsonProcessingException, URISyntaxException {
     URI uri = new URI(url);
@@ -157,6 +159,53 @@ public class S3Service {
     }
 
     return urlWithoutQuery.substring(0, lastSlashIndex + 1);
+  }
+
+  /**
+   * 정산 완료 후, 최종적으로 컴플라이언스 모드로 업로드 요청하는 함수
+   *
+   * @param folderName 업로드되어야 하는 contractId (폴더명)
+   * @throws JsonProcessingException
+   * @throws UnsupportedEncodingException
+   */
+  public void finalizeContractUpload(String folderName) throws JsonProcessingException, UnsupportedEncodingException {
+
+    // Presigned URL 발급 요청
+    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(s3BucketUrl + "/finalizeContractUpload")
+      .queryParam("filename", folderName);
+
+    // POST 요청 & 응답
+    ResponseEntity<Map> response = restTemplate.exchange(builder.build(false).toUriString(), HttpMethod.POST, new HttpEntity<>(new HttpHeaders()), Map.class);
+    Map<String, Object> responseBody = response.getBody();
+    if (responseBody == null) {
+      log.error("FinalizeUpload FAILED: Response body is null");
+      throw new RestApiException(CommonErrorCode.INTERNAL_SERVER_ERROR, "응답 본문이 존재하지 않습니다.");
+    }
+
+    int statusCode = (int) responseBody.get("statusCode");
+    String bodyString = (String) responseBody.get("body");
+
+    JsonNode json;
+    try {
+      json = objectMapper.readTree(bodyString);
+    } catch (JsonProcessingException e) {
+      log.error("JSON 파싱 실패: {}", e.getMessage(), e);
+      throw new RestApiException(CommonErrorCode.INTERNAL_SERVER_ERROR, "응답 JSON 파싱에 실패했습니다.");
+    }
+
+    // 로그 (성공/실패)
+    if (statusCode == HttpStatus.OK.value()) {
+      log.info("FinalizeUpload SUCCESS: message={}, folder={}, fileCount={}",
+        json.get("message").asText(),
+        json.path("folder").asText(null),
+        json.path("fileCount").asInt(0)
+      );
+    } else {
+      log.warn("FinalizeUpload FAILED: statusCode={}, message={}",
+        statusCode,
+        json.path("message").asText()
+      );
+    }
   }
 
 
