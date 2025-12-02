@@ -1,6 +1,8 @@
 package gighub.worketserver.domain;
 
 import gighub.worketserver.domain.constants.ContractType;
+import gighub.worketserver.dto.ClientInfoDto;
+import gighub.worketserver.dto.ContractInfoDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -77,5 +79,24 @@ public class Contract {
     this.clientSign = signUrl;
   }
 
-  public void updateClient(User user) {this.client = user;}
+  public void updateClient(User user) {
+    this.client = user;
+  }
+
+  /**
+   * 클라이언트 정보 변경 - 관리자용
+   */
+  public void updateClientInfo(ClientInfoDto clientInfoDto) {
+    this.clientName = clientInfoDto.getName();
+    this.clientPhone = clientInfoDto.getPhone();
+  }
+
+  /**
+   * 거래 정보 변경 - 관리자용
+   */
+  public void updateContractInfo(ContractInfoDto contractInfoDto) {
+    this.startDate = LocalDate.parse(contractInfoDto.getStartDate());
+    this.endDate = LocalDate.parse(contractInfoDto.getEndDate());
+    this.title = contractInfoDto.getTitle();
+  }
 }
