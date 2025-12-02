@@ -6,7 +6,6 @@ import lombok.*;
  * 수정 계약서 단건 조회 DTO
  */
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

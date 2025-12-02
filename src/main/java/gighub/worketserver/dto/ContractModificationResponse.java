@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
  * 수정 계약서 조회 DTO
  */
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
