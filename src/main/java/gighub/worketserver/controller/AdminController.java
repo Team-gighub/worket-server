@@ -6,6 +6,7 @@ import gighub.worketserver.dto.ContractModifyRequest;
 import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.service.AdminService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,12 +19,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminController {
   private final AdminService adminService;
-
-  @PostMapping
-  public ApiResponse<String> createModification(@RequestBody ContractModifyRequest request) {
-    adminService.createModification(request);
-    return ApiResponse.ok("요청 성공");
-  }
 
   @GetMapping
   public ApiResponse<List<ContractModificationResponse>> getModificationList() {
