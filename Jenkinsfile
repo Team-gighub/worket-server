@@ -71,7 +71,7 @@ pipeline {
             steps {
                 sshagent(credentials: ['deploy-key']) {
                     sh """
-                    ssh -v -o StrictHostKeyChecking=no ${EC2_HOST} '
+                    ssh -v ${EC2_HOST} '
                         cd ~/worket-server || mkdir ~/worket-server && cd ~/worket-server;
 
                         # 최신 이미지 pull
