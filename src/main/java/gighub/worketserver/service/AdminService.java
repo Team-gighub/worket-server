@@ -8,10 +8,7 @@ import gighub.worketserver.domain.constants.ModifyStatus;
 import gighub.worketserver.dto.*;
 import gighub.worketserver.global.exception.CommonErrorCode;
 import gighub.worketserver.global.exception.RestApiException;
-import gighub.worketserver.repository.ContractModifyRepository;
-import gighub.worketserver.repository.ContractRepository;
-import gighub.worketserver.repository.TransactionRepository;
-import gighub.worketserver.repository.UserRepository;
+import gighub.worketserver.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -19,7 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static gighub.worketserver.service.TransactionService.DATE_FORMATTER;
@@ -36,6 +36,92 @@ public class AdminService {
   private final ContractModifyRepository contractModifyRepository;
   private final ContractRepository contractRepository;
   private final UserRepository userRepository;
+  private final FreelancerProfileRepository freelancerProfileRepository;
+
+  /**
+   * DB 집계 결과(RoleCount 리스트)를 최종 응답 DTO로 변환
+   *
+   * @param roleCounts Repository에서 받은 role별 count
+   * @return all, freelancer, client 수가 계산된 RoleStats DTO
+   */
+  private RoleStats mapToRoleStats(List<RoleCount> roleCounts) {
+    long freelancerCount = 0;
+    long clientCount = 0;
+    long totalCount = freelancerCount + clientCount;
+
+    for (RoleCount rc : roleCounts) {
+      String role = rc.getRole();
+      Long count = rc.getCount();
+
+      if ("FREELANCER".equals(role)) {
+        freelancerCount = count;
+      } else if ("CLIENT".equals(role)) {
+        clientCount = count;
+      }
+    }
+    return RoleStats.builder()
+      .freelancer(freelancerCount)
+      .client(clientCount)
+      .all(totalCount)
+      .build();
+  }
+
+  /**
+   * DB 집계 결과(FreelancerExperience)를 최종 응답 DTO로 변환
+   *
+   * @return List<FreelancerExperience> Enum변환과 count가 들어간 최종 DTO
+   * @params List<FreelancerExperienceCounts> 업력에 따른 count
+   */
+  private List<FreelancerExperience> mapToExperienceStats(List<FreelancerExperienceCount> counts) {
+
+    // 1. ENUM을 Map으로 변환 (키: 이름, 값: level 문자열)
+    Map<String, String> experienceMap = Arrays.stream(FreelancerExperienceEnum.values())
+      .collect(Collectors.toMap(Enum::name, FreelancerExperienceEnum::getLevel));
+
+    // 2. 쿼리 결과를 새로운 DTO 리스트로 변환
+    return counts.stream()
+      .map(item -> {
+        String level = experienceMap.get(item.getName()); // DB 이름으로 level 매핑
+        if (level != null) {
+          return FreelancerExperience.builder()
+            .level(level)
+            .count(item.getCount().intValue())
+            .build();
+        }
+        return null;
+      })
+      .filter(Objects::nonNull)
+      .collect(Collectors.toList());
+  }
+
+  /**
+   * DB 집계 결과(FreelancerIndustry)를 최종 응답 DTO로 변환
+   *
+   * @return List<FreelancerIndustry> Enum변환과 count가 들어간 최종 DTO
+   * @params List<FreelancerExperienceCounts> 업력에 따른 count
+   */
+  private List<FreelancerIndustry> mapToIndustryStats(List<FreelancerExperienceCount> counts) {
+
+    // 1. ENUM을 Map으로 변환 (키: field, 값: field 자체)
+    Map<String, String> industryMap = Arrays.stream(FreelancerIndustryEnum.values())
+      .collect(Collectors.toMap(FreelancerIndustryEnum::getField, FreelancerIndustryEnum::getField));
+
+    // 2. 쿼리 결과를 새로운 DTO 리스트로 변환
+    return counts.stream()
+      .map(item -> {
+        String field = industryMap.get(item.getName());
+        if (field != null) {
+          return FreelancerIndustry.builder()
+            .field(field)
+            .count(item.getCount().intValue())
+            .build();
+        }
+        return null;
+      })
+      .filter(Objects::nonNull)
+      .collect(Collectors.toList());
+  }
+
 
   /**
    * 수정 계약서 요청
@@ -115,6 +201,7 @@ public class AdminService {
       .freelancerInfoDto(freelancerInfoDto)
       .contractInfoDto(contractInfoDto)
       .content(contractModification.getContent())
+      .contractId(contract.getId())
       .build();
   }
 
@@ -136,5 +223,39 @@ public class AdminService {
     // 상태 변경
     contractModification.updateStatus(ModifyStatus.APPROVED);
 
+  }
+
+  public AdminStatsResponse getDashboardStats() {
+
+    //1. UserStatics 정보 입력
+    //1-1. repository에서 받아온 값들 매핑
+    List<RoleCount> totalCounts = userRepository.countTotalUsersByRole();
+    List<RoleCount> dailyCounts = userRepository.countDailyNewUsersByRole();
+    List<RoleCount> monthlyCounts = userRepository.countMonthlyNewUsersByRole();
+
+    RoleStats totalStats = mapToRoleStats(totalCounts);
+    RoleStats dailyStats = mapToRoleStats(dailyCounts);
+    RoleStats monthlyStats = mapToRoleStats(monthlyCounts);
+
+    UserStatics userStats = UserStatics.builder()
+      .totalUsers(totalStats)
+      .dailyNewUsers(dailyStats)
+      .monthlyNewUsers(monthlyStats)
+      .build();
+
+    //2. Freelancer 업종, 업력 받아오기
+    List<FreelancerExperienceCount> experienceCounts = freelancerProfileRepository.countByExperienceLevel();
+    List<FreelancerExperience> experienceList = mapToExperienceStats(experienceCounts);
+    List<FreelancerExperienceCount> industryCounts = freelancerProfileRepository.countByIndustry();
+    List<FreelancerIndustry> industryList = mapToIndustryStats(industryCounts);
+    FreelancerDetail freelancerDetail = FreelancerDetail.builder()
+      .industry(industryList)
+      .experience(experienceList)
+      .build();
+
+    return AdminStatsResponse.builder()
+      .userStatics(userStats)
+      .freelancerDetail(freelancerDetail)
+      .build();
   }
 }
