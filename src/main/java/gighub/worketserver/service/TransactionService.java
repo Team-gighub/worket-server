@@ -256,6 +256,7 @@ public class TransactionService {
       .contractId(contract != null ? contract.getId() : null)
       .settledAmount(transaction.getSettlementAmount())
       .contractFileUrl(contractFile != null ?  contractFile.getFileUrl()+ "contract.pdf" : null)
+      .escrowId(transaction.getEscrowConfimId() !=null ?  transaction.getEscrowConfimId() : null)
       .contractInfo(contract != null ? ContractInfoDto.builder()
         .title(contract.getTitle())
         .amount(contract.getAmount())
