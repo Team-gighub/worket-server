@@ -1,5 +1,6 @@
 package gighub.worketserver.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import gighub.worketserver.dto.*;
 import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.service.PaymentService;
@@ -21,8 +22,8 @@ public class PaymentController {
   }
 
   @PostMapping("/confirm")
-  public ApiResponse<CoreConfirmResponse> confirm(@Valid @RequestBody PaymentConfirmRequest request) {
+  public ApiResponse<CoreConfirmResponse> confirm(@Valid @RequestBody PaymentConfirmRequest request) throws JsonProcessingException {
 
-    return ApiResponse.ok(paymentService.confirm(request.getTransactionId(), request.getEscrowId(), request.getMarchantId()));
+    return ApiResponse.ok(paymentService.confirm(request.getTransactionId(), request.getEscrowId(), request.getMerchantId()));
   }
 }
