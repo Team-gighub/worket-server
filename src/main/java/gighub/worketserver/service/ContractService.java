@@ -304,7 +304,16 @@ public class ContractService {
 
     String uploadedContractFile = s3Service.uploadContractFile(pdfBytes, contract.getId() + "/contract.pdf", "application/pdf");
     s3Service.uploadContractFile(hash.getBytes(StandardCharsets.UTF_8), contract.getId() + "/hash.txt", "text/plain");
-    s3Service.uploadContractFile(metadataJson, contract.getId() + "/metadata.json", "application/json");
+    try {
+      s3Service.uploadContractFile(
+        metadataJson,
+        contract.getId() + "/metadata.json",
+        "application/json"
+      );
+    } catch (Exception e) {
+      log.warn("metadata.json 업로드 실패 - 무시하고 계속 진행합니다. contractId={}, error={}",
+        contract.getId(), e.getMessage());
+    }
 
     return new UploadResultDTO(uploadedContractFile, hash);
   }
