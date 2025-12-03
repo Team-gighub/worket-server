@@ -1,9 +1,7 @@
 package gighub.worketserver.client;
 
-import gighub.worketserver.dto.CoreApprovalRequest;
-import gighub.worketserver.dto.CoreConfirmRequest;
-import gighub.worketserver.dto.CoreConfirmResponse;
-import gighub.worketserver.dto.PaymentApprovalResponse;
+import gighub.worketserver.dto.*;
+import gighub.worketserver.global.response.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,10 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 )
 public interface CoreApiClient {
 
-  @PostMapping("/payment/approval")
-  PaymentApprovalResponse requestPaymentApproval(@RequestBody CoreApprovalRequest request);
+  @PostMapping("/api/v1/payment/approval")
+  ApiResponse<CoreApprovalResponse> requestPaymentApproval(@RequestBody CoreApprovalRequest request);
 
-  @PostMapping("/payment/confirm")
-  CoreConfirmResponse requestPaymentConfirm(@RequestBody CoreConfirmRequest request);
+  @PostMapping("/api/v1/payment/confirm")
+  ApiResponse<CoreConfirmResponse> requestPaymentConfirm(@RequestBody CoreConfirmRequest request);
 
 }
