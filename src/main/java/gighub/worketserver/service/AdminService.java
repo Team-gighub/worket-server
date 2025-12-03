@@ -1,9 +1,6 @@
 package gighub.worketserver.service;
 
-import gighub.worketserver.domain.Contract;
-import gighub.worketserver.domain.ContractModification;
-import gighub.worketserver.domain.Transaction;
-import gighub.worketserver.domain.User;
+import gighub.worketserver.domain.*;
 import gighub.worketserver.domain.constants.ModifyStatus;
 import gighub.worketserver.dto.*;
 import gighub.worketserver.global.exception.CommonErrorCode;
@@ -37,6 +34,7 @@ public class AdminService {
   private final ContractRepository contractRepository;
   private final UserRepository userRepository;
   private final FreelancerProfileRepository freelancerProfileRepository;
+  private final ContractFileRepository contractFileRepository;
 
   /**
    * DB 집계 결과(RoleCount 리스트)를 최종 응답 DTO로 변환
@@ -174,6 +172,8 @@ public class AdminService {
     ContractModification contractModification = contractModifyRepository.findById(id).orElseThrow(() -> new RuntimeException("Contract not found"));
     Transaction transaction = transactionRepository.findById(contractModification.getTransaction().getId()).orElseThrow(() -> new RuntimeException("Transaction not found"));
     Contract contract = contractRepository.findById(transaction.getContract().getId()).orElseThrow(() -> new RuntimeException("Contract not found"));
+    ContractFile contractFile = contractFileRepository.findByContractId(contract.getId());
+    String fileUrl = contractFile.getFileUrl();
     //사용자 정보
     ClientInfoDto clientInfoDto = ClientInfoDto.builder()
       .name(contract.getClient().getName())
@@ -201,7 +201,7 @@ public class AdminService {
       .freelancerInfoDto(freelancerInfoDto)
       .contractInfoDto(contractInfoDto)
       .content(contractModification.getContent())
-      .contractId(contract.getId())
+      .fileUrl(fileUrl)
       .build();
   }
 
