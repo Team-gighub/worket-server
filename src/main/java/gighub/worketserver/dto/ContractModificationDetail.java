@@ -14,4 +14,5 @@ public class ContractModificationDetail {
   private ClientInfoDto clientInfoDto;
   private ContractInfoDto contractInfoDto;
   private String content;
+  private long contractId;
 }
