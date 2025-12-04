@@ -70,8 +70,8 @@ public class Transaction {
   @Builder.Default
   private LocalDateTime updatedAt = LocalDateTime.now();
 
-  @Column(name = "escrow_confim_tid")
-  private String escrowConfimId;
+  @Column(name = "escrow_confirm_tid")
+  private String escrowConfirmId;
 
   @Column(name="settlement_tid")
   private String settlementId;
