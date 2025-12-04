@@ -56,3 +56,8 @@ s3:
 
 jwt:
   secret-key: ${JWT_SECRET_KEY:Z3VAbXp5d0FOMlRrc2pCTE9wNkh4S1hCYWZsR1pCZ0Z4cHBXTXh0RQ==}
+
+external:
+  api:
+    account-system:
+      url: ${CHANNEL_SERVER_URL}

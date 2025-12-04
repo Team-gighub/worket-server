@@ -6,10 +6,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(
-  name = "account-core-client",
-  url = "${core.account.base-url}"
-)
+@FeignClient(name = "account-system", url = "${external.api.account-system.url}")
 public interface CoreApiClient {
 
   @PostMapping("/api/v1/payment/approval")
