@@ -70,6 +70,6 @@ public enum PgErrorCode implements ErrorCode{
       }
     }
     log.error("매핑되지 않은 외부 PG 오류 코드 수신: {}", code);
-    return INTERNAL_SERVER_ERROR; // 없으면 null → fallback 처리
+    return INTERNAL_SERVER_ERROR; // 매핑되는 코드가 없을 경우 기본 에러를 반환합니다.
   }
 }
