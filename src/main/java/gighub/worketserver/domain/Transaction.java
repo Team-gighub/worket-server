@@ -1,6 +1,8 @@
 package gighub.worketserver.domain;
 
 import gighub.worketserver.domain.constants.TransactionStatus;
+import gighub.worketserver.dto.ClientInfoDto;
+import gighub.worketserver.dto.FreelancerInfoDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -102,5 +104,13 @@ public class Transaction {
       case PAYMENT_CONFIRMED -> this.paymentConfirmedAt = now;
       case SETTLED -> this.settledAt = now;
     }
+  }
+
+  /**
+   * 프리랜서 정보 변경 - 관리자용
+   */
+  public void updateFreelancerInfo(FreelancerInfoDto freelancerInfoDto) {
+    this.freelancerAccount = freelancerInfoDto.getAccount();
+    this.freelancerBank = freelancerInfoDto.getBank();
   }
 }
