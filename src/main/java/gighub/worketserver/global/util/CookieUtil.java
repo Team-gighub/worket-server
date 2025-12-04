@@ -17,11 +17,7 @@ public class CookieUtil {
   private boolean secure;
 
   public ResponseCookie createTokenCookie(String name, String value, long maxAgeSeconds) {
-    // 로컬에서는 domain 비움
-    String domainToSet = (cookieDomain == null || cookieDomain.isBlank())
-      ? null
-      : cookieDomain;
-
+    String domainToSet = cookieDomain.isBlank() ? null : cookieDomain;
     return ResponseCookie.from(name, value)
       .httpOnly(true)
       .secure(secure)
