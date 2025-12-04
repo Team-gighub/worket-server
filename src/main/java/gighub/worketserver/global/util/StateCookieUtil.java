@@ -15,8 +15,6 @@ public class StateCookieUtil {
   private boolean secure;
 
   public ResponseCookie createStateCookie(String name, String value, long maxAgeSeconds) {
-    System.out.println("cookieDomain: " + cookieDomain);
-    System.out.println("secure: " + secure);
     return ResponseCookie.from(name, value)
       .httpOnly(true)
       .secure(secure)
