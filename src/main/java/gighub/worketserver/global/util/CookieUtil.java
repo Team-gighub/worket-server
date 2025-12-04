@@ -9,9 +9,10 @@ public class CookieUtil {
   public ResponseCookie createTokenCookie(String name, String value, long maxAgeSeconds) {
     return ResponseCookie.from(name, value)
       .httpOnly(true)
-      .secure(false)
-      .sameSite("Lax")
+      .secure(true)
+      .sameSite("None")
       .path("/")
+      .domain("worket.site")
       .maxAge(maxAgeSeconds)
       .build();
   }

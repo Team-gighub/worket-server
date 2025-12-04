@@ -11,6 +11,8 @@ import gighub.worketserver.global.security.handler.OAuth2SuccessHandler;
 import gighub.worketserver.global.security.service.CustomOAuth2UserService;
 import gighub.worketserver.global.security.repository.CustomAuthorizationRequestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.FormHttpMessageConverter;
@@ -25,6 +27,7 @@ import org.springframework.security.oauth2.client.endpoint.DefaultAuthorizationC
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
+import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
@@ -35,6 +38,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.ForwardedHeaderFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -53,6 +57,9 @@ public class CustomSecurityConfig {
   private final PasscodeCheckFilter passcodeCheckFilter;
   private final ProfileCheckFilter profileCheckFilter;
 
+  @Value("${frontend.base-url}")
+  private String frontendBaseUrl;
+
   @Bean
   public SecurityFilterChain filterChain(
     HttpSecurity http,
@@ -68,10 +75,12 @@ public class CustomSecurityConfig {
       .httpBasic(basic -> basic.disable())
 
       .authorizeHttpRequests(auth -> auth
+        .requestMatchers("/login/oauth2/**").permitAll()
         .requestMatchers("/oauth2/**").permitAll()
         .requestMatchers("/auth/token/**").permitAll()
         .requestMatchers("/test").permitAll()
         .requestMatchers("/transactions/*/preview").permitAll()
+        .requestMatchers("/actuator/**").permitAll()
         .anyRequest().authenticated()
       )
 
@@ -90,7 +99,7 @@ public class CustomSecurityConfig {
         .accessDeniedHandler(customAccessDeniedHandler)
       )
 
-      .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+      .addFilterAfter(tokenAuthenticationFilter, OAuth2LoginAuthenticationFilter.class)
       .addFilterAfter(profileCheckFilter, AuthorizationFilter.class)
       .addFilterAfter(passcodeCheckFilter, AuthorizationFilter.class);
 
@@ -99,8 +108,9 @@ public class CustomSecurityConfig {
 
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
+
     CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOriginPatterns(List.of("http://localhost:3000"));
+    config.setAllowedOriginPatterns(List.of(frontendBaseUrl));
     config.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
     config.setAllowedHeaders(List.of("*"));
     config.setAllowCredentials(true);
@@ -131,5 +141,13 @@ public class CustomSecurityConfig {
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public FilterRegistrationBean<ForwardedHeaderFilter> forwardedHeaderFilter() {
+    FilterRegistrationBean<ForwardedHeaderFilter> bean =
+      new FilterRegistrationBean<>(new ForwardedHeaderFilter());
+    bean.setOrder(0);
+    return bean;
   }
 }
