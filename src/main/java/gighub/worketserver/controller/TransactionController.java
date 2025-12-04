@@ -1,11 +1,10 @@
 package gighub.worketserver.controller;
 
-import gighub.worketserver.dto.TransactionDetailResponse;
-import gighub.worketserver.dto.TransactionListResponse;
-import gighub.worketserver.dto.TransactionPermissionResponse;
-import gighub.worketserver.dto.TransactionPreviewResponse;
+import gighub.worketserver.dto.*;
 import gighub.worketserver.global.response.ApiResponse;
+import gighub.worketserver.service.AdminService;
 import gighub.worketserver.service.TransactionService;
+import gighub.worketserver.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 public class TransactionController {
 
   private final TransactionService transactionService;
+  private final AdminService adminService;
+  private final UserService userService;
 
   /**
    * 거래 전체 조회 (월별)
@@ -67,5 +68,15 @@ public class TransactionController {
       authentication,
       transactionId);
     return ApiResponse.ok(response);
+  }
+
+  /**
+   * 계약서 수정요청
+   * POST /transactions/{transactionId}
+   */
+  @PostMapping("/{transactionId}")
+  public void createModification(Authentication authentication, @PathVariable Long transactionId,
+                                 @RequestBody ContractModifyRequest request) {
+    adminService.createModification(authentication, request, transactionId);
   }
 }
