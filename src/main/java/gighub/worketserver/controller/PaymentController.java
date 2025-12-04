@@ -16,7 +16,7 @@ public class PaymentController {
   private final PaymentService paymentService;
 
   @PostMapping("/approval")
-  public ApiResponse<PaymentApprovalResponse> approval(@Valid @RequestBody PaymentApprovalRequest request) {
+  public ApiResponse<PaymentApprovalResponse> approval(@Valid @RequestBody PaymentApprovalRequest request) throws JsonProcessingException {
 
     return ApiResponse.ok(paymentService.approval(request.getTransactionId(),request.getEscrowId(), request.getConfirmToken()));
   }
