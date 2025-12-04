@@ -14,12 +14,13 @@ public class StateCookieUtil {
   private boolean secure;
 
   public ResponseCookie createStateCookie(String name, String value, long maxAgeSeconds) {
+    String domainToSet = cookieDomain.isBlank() ? null : cookieDomain;
     return ResponseCookie.from(name, value)
       .httpOnly(true)
       .secure(secure)
-      .sameSite("Lax")     // 핵심: AuthorizationRequest state는 Lax여야 정상 작동
+      .sameSite("Lax")     // AuthorizationRequest state는 Lax여야 정상 작동
       .path("/")
-      .domain(cookieDomain)
+      .domain(domainToSet)
       .maxAge(maxAgeSeconds)
       .build();
   }
