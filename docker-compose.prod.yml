@@ -1,0 +1,17 @@
+services:
+  worket-server:
+    container_name: worket-server
+    image: ${IMAGE_NAME}:${IMAGE_TAG}   # Docker Hub에서 pull할 이미지
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    ports:
+      - "8080:8080"
+
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10

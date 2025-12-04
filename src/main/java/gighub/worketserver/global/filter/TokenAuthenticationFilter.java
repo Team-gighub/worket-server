@@ -36,6 +36,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     return uri.startsWith("/test")
       || uri.startsWith("/oauth2")
       || uri.startsWith("/auth/token")
+      || uri.startsWith("/login/oauth2")
+      || uri.startsWith("/actuator")
       || uri.matches("^/transactions/\\d+/preview$");
   }
 
