@@ -15,6 +15,7 @@ import gighub.worketserver.global.exception.RestApiException;
 import gighub.worketserver.global.response.ApiResponse;
 import gighub.worketserver.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,9 @@ public class PaymentService {
   private final TransactionRepository transactionRepository;
   private final ObjectMapper objectMapper;
 
+  @Value("${pg.api-key}")
+  private String pgApiKey;
+
 
   @Transactional
   public PaymentApprovalResponse approval(Long transactionId ,String escrowId, String confirmToken) throws JsonProcessingException {
@@ -40,7 +44,7 @@ public class PaymentService {
       );
 
       // 2) 계정계 서버 호출
-      CoreApprovalResponse coreResp = coreApiClient.requestPaymentApproval(request).getData();
+      CoreApprovalResponse coreResp = coreApiClient.requestPaymentApproval(pgApiKey,request).getData();
 
       if (coreResp == null) {
         throw new RestApiException(CommonErrorCode.INTERNAL_SERVER_ERROR, "core 접근 중 에러 발생");
@@ -102,7 +106,7 @@ public class PaymentService {
       );
 
       // 2) 계정계 서버 호출
-      ApiResponse<CoreConfirmResponse> res = coreApiClient.requestPaymentConfirm(request);
+      ApiResponse<CoreConfirmResponse> res = coreApiClient.requestPaymentConfirm(pgApiKey,request);
       CoreConfirmResponse coreResp = res.getData();
 
       if (coreResp == null) {
