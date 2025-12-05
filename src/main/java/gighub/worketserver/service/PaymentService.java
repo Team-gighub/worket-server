@@ -53,7 +53,7 @@ public class PaymentService {
       Transaction tx = transactionRepository.findById(transactionId)
         .orElseThrow(() -> new RestApiException(CommonErrorCode.NOT_FOUND, "Transaction을 찾을 수 없습니다"));
 
-      tx.setEscrowConfimId(coreResp.getEscrowId());
+      tx.setEscrowConfirmId(coreResp.getEscrowId());
       tx.setClientBank(coreResp.getPayerBankCode());
       tx.setClientAccount(coreResp.getPayerAccount());
 
