@@ -30,7 +30,7 @@ public class PaymentService {
   private final TransactionRepository transactionRepository;
   private final ObjectMapper objectMapper;
 
-  @Value("pg.api-key}")
+  @Value("${pg.api-key}")
   private String pgApiKey;
 
 
