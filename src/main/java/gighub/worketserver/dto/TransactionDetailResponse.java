@@ -22,4 +22,5 @@ public class TransactionDetailResponse {
   private ContractInfoDto contractInfo;
   private ClientInfoDto clientInfo;
   private FreelancerInfoDto freelancerInfo;
+  private String escrowId;
 }

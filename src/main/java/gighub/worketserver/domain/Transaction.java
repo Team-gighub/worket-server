@@ -1,6 +1,8 @@
 package gighub.worketserver.domain;
 
 import gighub.worketserver.domain.constants.TransactionStatus;
+import gighub.worketserver.dto.ClientInfoDto;
+import gighub.worketserver.dto.FreelancerInfoDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,6 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "transaction")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -59,9 +62,6 @@ public class Transaction {
   @Column(name = "settled_at")
   private LocalDateTime settledAt;
 
-  @Column(name = "settlement_tx_id")
-  private Long settlementTxId;
-
   @Column(name = "created_at")
   @Builder.Default
   private LocalDateTime createdAt = LocalDateTime.now();
@@ -69,6 +69,12 @@ public class Transaction {
   @Column(name = "updated_at")
   @Builder.Default
   private LocalDateTime updatedAt = LocalDateTime.now();
+
+  @Column(name = "escrow_confirm_tid")
+  private String escrowConfirmId;
+
+  @Column(name="settlement_tid")
+  private String settlementId;
 
   @PrePersist
   public void prePersist() {
@@ -98,5 +104,13 @@ public class Transaction {
       case PAYMENT_CONFIRMED -> this.paymentConfirmedAt = now;
       case SETTLED -> this.settledAt = now;
     }
+  }
+
+  /**
+   * 프리랜서 정보 변경 - 관리자용
+   */
+  public void updateFreelancerInfo(FreelancerInfoDto freelancerInfoDto) {
+    this.freelancerAccount = freelancerInfoDto.getAccount();
+    this.freelancerBank = freelancerInfoDto.getBank();
   }
 }

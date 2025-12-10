@@ -30,8 +30,11 @@ public class ProfileCheckFilter extends OncePerRequestFilter {
     String method = request.getMethod();
 
     // 1. 기본적으로 필터를 적용하지 않을 경로들
+    // 필수 예외 경로
     if (uri.startsWith("/test")
-      || uri.startsWith("/oauth2")
+      || uri.startsWith("/oauth2")                // OAuth2 로그인
+      || uri.startsWith("/actuator")              // 헬스체크
+      || uri.startsWith("/auth/passcode")         // 패스코드 등록/검증
       || uri.matches("^/transactions/\\d+/preview$")) {
       return true;
     }

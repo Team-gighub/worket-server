@@ -1,6 +1,12 @@
 package gighub.worketserver.domain;
 
 import gighub.worketserver.domain.constants.ContractType;
+import gighub.worketserver.dto.ClientInfoDto;
+import gighub.worketserver.dto.ContractInfoDto;
+import gighub.worketserver.global.exception.CommonErrorCode;
+import gighub.worketserver.global.exception.CustomException;
+import gighub.worketserver.global.exception.ErrorCode;
+import gighub.worketserver.global.exception.RestApiException;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -77,5 +83,32 @@ public class Contract {
     this.clientSign = signUrl;
   }
 
-  public void updateClient(User user) {this.client = user;}
+  public void updateClient(User user) {
+    this.client = user;
+  }
+
+  /**
+   * 클라이언트 정보 변경 - 관리자용
+   */
+  public void updateClientInfo(ClientInfoDto clientInfoDto) {
+    this.clientName = clientInfoDto.getName();
+    this.clientPhone = clientInfoDto.getPhone();
+  }
+
+  /**
+   * 거래 정보 변경 - 관리자용
+   */
+  public void updateContractInfo(ContractInfoDto contractInfoDto) {
+    try {
+      if (contractInfoDto.getStartDate() != null) {
+        this.startDate = LocalDate.parse(contractInfoDto.getStartDate());
+      }
+      if (contractInfoDto.getEndDate() != null) {
+        this.endDate = LocalDate.parse(contractInfoDto.getEndDate());
+      }
+      this.title = contractInfoDto.getTitle();
+    } catch (java.time.format.DateTimeParseException e) {
+      throw new RestApiException(CommonErrorCode.BAD_REQUEST, "날짜 형식이 올바르지 않습니다.");
+    }
+  }
 }
